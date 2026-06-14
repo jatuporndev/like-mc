@@ -85,6 +85,25 @@ export interface LeaderboardEntry {
   rank: number;
 }
 
+/** A top scorer synced from football-data.org. Part of the meta/scorers doc. */
+export interface Scorer {
+  playerId: number | null;
+  playerName: string;
+  nationality: string | null;
+  teamName: string;
+  teamCrest: string | null;
+  goals: number;
+  assists: number | null;
+  penalties: number | null;
+  playedMatches: number | null;
+}
+
+/** Top-scorers snapshot, fully replaced each sync. Stored at meta/scorers. */
+export interface ScorersDoc {
+  scorers: Scorer[];
+  updatedAt: string;
+}
+
 /** Metadata about the most recent sync run. Stored at meta/sync. */
 export interface SyncLog {
   lastSyncAt: string;

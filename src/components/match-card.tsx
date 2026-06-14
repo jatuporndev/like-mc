@@ -55,7 +55,14 @@ export function MatchCard({
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card
+      className={cn(
+        "overflow-hidden",
+        // Live matches carry their own emphasis (no wrapping container) so the
+        // card sits in the same grid as every other match without nesting.
+        live && "ring-1 ring-primary/50"
+      )}
+    >
       {/* Meta row */}
       <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">
         <span className="truncate">
@@ -64,9 +71,10 @@ export function MatchCard({
             ? ` · ${match.group.replace("GROUP_", `${t("board.group")} `)}`
             : ""}
         </span>
-        <span className="flex items-center gap-1">
+        <span className="flex items-center gap-1.5">
           {live ? (
-            <span className="font-semibold uppercase tracking-wide text-primary">
+            <span className="flex items-center gap-1.5 font-semibold text-primary">
+              <span className="live-dot shrink-0" aria-hidden />
               {t("match.playing")}
             </span>
           ) : (
@@ -76,16 +84,17 @@ export function MatchCard({
         </span>
       </div>
 
-      {/* Teams + score */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-3">
-        <div className="flex flex-col items-center gap-1 text-center">
+      {/* Teams + score — 3 equal columns so each crest sits centered directly
+          above its matching prediction button below. */}
+      <div className="grid grid-cols-3 items-start gap-2 px-4 py-3">
+        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
           <TeamCrest src={match.homeCrest} name={match.homeTeam} size={40} />
-          <span className="text-sm font-semibold leading-tight">
+          <span className="break-words text-sm font-semibold leading-tight">
             {match.homeTeam}
           </span>
         </div>
 
-        <div className="flex min-w-12 flex-col items-center">
+        <div className="flex h-full min-w-12 flex-col items-center justify-center">
           {hasScore ? (
             <span className="text-xl font-bold tabular-nums">
               {match.homeScore}–{match.awayScore}
@@ -97,9 +106,9 @@ export function MatchCard({
           )}
         </div>
 
-        <div className="flex flex-col items-center gap-1 text-center">
+        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
           <TeamCrest src={match.awayCrest} name={match.awayTeam} size={40} />
-          <span className="text-sm font-semibold leading-tight">
+          <span className="break-words text-sm font-semibold leading-tight">
             {match.awayTeam}
           </span>
         </div>
@@ -110,14 +119,22 @@ export function MatchCard({
         {OUTCOMES.map((outcome) => {
           const isPicked = picked === outcome;
           const isWinner = match.winner === outcome;
+          const label =
+            outcome === "HOME_TEAM"
+              ? `${match.homeTeam} ${t("match.win")}`
+              : outcome === "AWAY_TEAM"
+                ? `${match.awayTeam} ${t("match.win")}`
+                : t("match.draw");
           return (
             <button
               key={outcome}
               type="button"
               disabled={locked}
+              aria-pressed={isPicked}
+              aria-label={label}
               onClick={() => choose(outcome)}
               className={cn(
-                "rounded-md border py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed",
+                "flex min-h-11 items-center justify-center rounded-md border px-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed",
                 isPicked
                   ? "border-primary bg-primary text-primary-foreground"
                   : "hover:bg-accent",
@@ -172,7 +189,9 @@ function PicksRow({
         return (
           <div key={outcome} className="flex flex-col items-center gap-1">
             {players.length === 0 ? (
-              <span className="text-[10px] text-muted-foreground/60">—</span>
+              <span className="text-xs text-muted-foreground" aria-hidden>
+                —
+              </span>
             ) : (
               players.map((p) => (
                 <div
@@ -188,11 +207,11 @@ function PicksRow({
                     {p.photoURL && (
                       <AvatarImage src={p.photoURL} alt={p.displayName} />
                     )}
-                    <AvatarFallback className="text-[8px]">
+                    <AvatarFallback className="text-[9px]">
                       {p.displayName.slice(0, 1).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate text-[10px] font-medium">
+                  <span className="min-w-0 truncate text-[11px] font-medium">
                     {p.uid === currentUid
                       ? t("match.you")
                       : p.displayName.split(" ")[0]}

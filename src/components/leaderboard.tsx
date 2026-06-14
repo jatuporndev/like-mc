@@ -1,9 +1,10 @@
 "use client";
 
-import { Medal, Trophy } from "lucide-react";
+import { Medal, Trophy, WifiOff } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
@@ -13,10 +14,12 @@ import { useI18n } from "@/lib/i18n/context";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import type { LeaderboardEntry } from "@/types";
 
+// Gold / silver / bronze, with dark-mode variants so the bronze stays legible
+// on the deep navy card.
 const RANK_STYLES: Record<number, string> = {
-  1: "text-yellow-500",
-  2: "text-slate-400",
-  3: "text-amber-700",
+  1: "text-yellow-500 dark:text-yellow-400",
+  2: "text-slate-400 dark:text-slate-300",
+  3: "text-amber-700 dark:text-amber-500",
 };
 
 function RankBadge({ rank }: { rank: number }) {
@@ -39,7 +42,7 @@ export function Leaderboard({
 }) {
   const { user } = useAuth();
   const { t } = useI18n();
-  const { data, isLoading } = useLeaderboard();
+  const { data, isLoading, isError, refetch } = useLeaderboard();
 
   if (isLoading) {
     return (
@@ -51,13 +54,27 @@ export function Leaderboard({
     );
   }
 
+  if (isError) {
+    return (
+      <EmptyState
+        icon={WifiOff}
+        title={t("lb.loadError")}
+        description={t("lb.loadErrorDesc")}
+      >
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          {t("common.retry")}
+        </Button>
+      </EmptyState>
+    );
+  }
+
   const entries: LeaderboardEntry[] = data ?? [];
   if (entries.length === 0) {
     return (
       <EmptyState
         icon={Trophy}
-        title="No players yet"
-        description="The leaderboard fills up as friends sign in and start predicting."
+        title={t("lb.empty")}
+        description={t("lb.emptyDesc")}
       />
     );
   }
@@ -91,7 +108,7 @@ export function Leaderboard({
                 {entry.displayName}
                 {isMe && (
                   <span className="ml-1 text-xs text-muted-foreground">
-                    (you)
+                    {t("lb.you")}
                   </span>
                 )}
               </p>
@@ -109,7 +126,7 @@ export function Leaderboard({
 
             <div className="flex flex-col items-end gap-0.5">
               <Badge variant={entry.rank === 1 ? "default" : "secondary"}>
-                {entry.points} pt{entry.points === 1 ? "" : "s"}
+                {entry.points} {entry.points === 1 ? t("lb.pt") : t("lb.pts")}
               </Badge>
               {entry.championBonus > 0 && (
                 <span className="text-[10px] leading-none text-muted-foreground">

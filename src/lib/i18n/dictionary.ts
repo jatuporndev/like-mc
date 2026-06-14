@@ -18,6 +18,7 @@ const en = {
   "nav.leaderboard": "Leaderboard",
   "nav.admin": "Admin",
   "nav.signOut": "Sign out",
+  "nav.menu": "Menu",
 
   // Champion banner
   "banner.yourPick": "Your champion pick",
@@ -47,12 +48,40 @@ const en = {
   "dash.leaderboard": "Leaderboard",
   "dash.viewAll": "View all",
   "dash.championBonus": "champion bonus",
+  "dash.dataUpdated": "Data updated",
+  "dash.rank": "Rank",
+  "dash.statPoints": "Points",
+  "dash.champion": "Champion",
+  "dash.unranked": "Unranked",
+  "dash.noPick": "Not picked",
 
   // Leaderboard page
   "lb.title": "Leaderboard",
   "lb.subtitle":
     "One point per correct match prediction, plus champion bonus points for how far your champion pick advances (final +5, semi +3, quarter +1, winner +10).",
   "lb.bonus": "champion bonus",
+  "lb.you": "(you)",
+  "lb.pt": "pt",
+  "lb.pts": "pts",
+  "lb.empty": "No players yet",
+  "lb.emptyDesc":
+    "The leaderboard fills up as friends sign in and start predicting.",
+  "lb.loadError": "Couldn't load the leaderboard",
+  "lb.loadErrorDesc": "Check your connection and try again.",
+
+  // Top scorers
+  "scorers.title": "Top scorers",
+  "scorers.subtitle":
+    "The race for the Golden Boot — most World Cup goals so far.",
+  "scorers.player": "Player",
+  "scorers.goals": "goals",
+  "scorers.matches": "matches",
+  "scorers.assists": "assists",
+  "scorers.penalties": "pens",
+  "scorers.empty": "No goals yet",
+  "scorers.emptyDesc": "Top scorers show up here once the goals start flying.",
+  "scorers.loadError": "Couldn't load scorers",
+  "scorers.loadErrorDesc": "Check your connection and try again.",
 
   // Match day labels
   "day.today": "Today",
@@ -71,9 +100,12 @@ const en = {
   "board.noUpcomingDesc": "All scheduled matches have kicked off.",
   "board.noCompleted": "No completed matches yet",
   "board.noCompletedDesc": "Played matches will show up here with results.",
+  "board.loadError": "Couldn't load matches",
+  "board.loadErrorDesc": "Check your connection and try again.",
 
   // Match card
   "match.draw": "Draw",
+  "match.win": "to win",
   "match.vs": "vs",
   "match.playing": "Playing",
   "match.you": "You",
@@ -88,6 +120,7 @@ const en = {
 
   // Generic
   "common.loading": "Loading…",
+  "common.retry": "Try again",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -98,6 +131,7 @@ const th: Record<MessageKey, string> = {
   "nav.leaderboard": "ตารางคะแนน",
   "nav.admin": "ผู้ดูแล",
   "nav.signOut": "ออกจากระบบ",
+  "nav.menu": "เมนู",
 
   // Champion banner
   "banner.yourPick": "ทีมแชมป์ที่คุณเลือก",
@@ -126,12 +160,38 @@ const th: Record<MessageKey, string> = {
   "dash.leaderboard": "ตารางคะแนน",
   "dash.viewAll": "ดูทั้งหมด",
   "dash.championBonus": "โบนัสทีมแชมป์",
+  "dash.dataUpdated": "อัปเดตข้อมูลเมื่อ",
+  "dash.rank": "อันดับ",
+  "dash.statPoints": "คะแนน",
+  "dash.champion": "ทีมแชมป์",
+  "dash.unranked": "ยังไม่มีอันดับ",
+  "dash.noPick": "ยังไม่ได้เลือก",
 
   // Leaderboard page
   "lb.title": "ตารางคะแนน",
   "lb.subtitle":
     "ทายผลถูกได้แมตช์ละ 1 คะแนน บวกคะแนนโบนัสตามรอบที่ทีมแชมป์ที่เลือกไปถึง (รอบชิง +5, รองชนะเลิศ +3, ก่อนรองฯ +1, ชนะเลิศ +10)",
   "lb.bonus": "โบนัสทีมแชมป์",
+  "lb.you": "(คุณ)",
+  "lb.pt": "pt",
+  "lb.pts": "pts",
+  "lb.empty": "ยังไม่มีผู้เล่น",
+  "lb.emptyDesc": "ตารางคะแนนจะมีชื่อเมื่อเพื่อน ๆ เข้าสู่ระบบและเริ่มทายผล",
+  "lb.loadError": "โหลดตารางคะแนนไม่สำเร็จ",
+  "lb.loadErrorDesc": "ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
+
+  // Top scorers
+  "scorers.title": "ดาวซัลโว",
+  "scorers.subtitle": "การลุ้นรองเท้าทองคำ — ผู้ทำประตูสูงสุดในฟุตบอลโลกถึงตอนนี้",
+  "scorers.player": "ผู้เล่น",
+  "scorers.goals": "ประตู",
+  "scorers.matches": "นัด",
+  "scorers.assists": "แอสซิสต์",
+  "scorers.penalties": "จุดโทษ",
+  "scorers.empty": "ยังไม่มีประตู",
+  "scorers.emptyDesc": "ดาวซัลโวจะแสดงที่นี่เมื่อเริ่มมีการทำประตู",
+  "scorers.loadError": "โหลดดาวซัลโวไม่สำเร็จ",
+  "scorers.loadErrorDesc": "ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
 
   // Match day labels
   "day.today": "วันนี้",
@@ -150,9 +210,12 @@ const th: Record<MessageKey, string> = {
   "board.noUpcomingDesc": "แมตช์ที่กำหนดไว้ทั้งหมดเริ่มแข่งแล้ว",
   "board.noCompleted": "ยังไม่มีแมตช์ที่แข่งจบ",
   "board.noCompletedDesc": "แมตช์ที่แข่งจบแล้วจะแสดงที่นี่พร้อมผลการแข่งขัน",
+  "board.loadError": "โหลดแมตช์ไม่สำเร็จ",
+  "board.loadErrorDesc": "ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
 
   // Match card
   "match.draw": "เสมอ",
+  "match.win": "ชนะ",
   "match.vs": "พบ",
   "match.playing": "กำลังแข่ง",
   "match.you": "คุณ",
@@ -167,6 +230,7 @@ const th: Record<MessageKey, string> = {
 
   // Generic
   "common.loading": "กำลังโหลด…",
+  "common.retry": "ลองอีกครั้ง",
 };
 
 export const MESSAGES: Record<Lang, Record<MessageKey, string>> = { en, th };

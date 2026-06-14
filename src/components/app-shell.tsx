@@ -20,7 +20,9 @@ export function AppShell({
   return (
     <AuthGate adminOnly={adminOnly}>
       <Navbar />
-      <main className="container py-6">{children}</main>
+      <main className="container pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        {children}
+      </main>
     </AuthGate>
   );
 }

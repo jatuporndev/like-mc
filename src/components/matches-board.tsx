@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarClock, CalendarCheck2, Flame } from "lucide-react";
+import { CalendarClock, CalendarCheck2, WifiOff } from "lucide-react";
 
 import { MatchCard } from "@/components/match-card";
 import { MatchDaySection } from "@/components/match-day-section";
@@ -18,7 +18,12 @@ import { useMatchPicks } from "@/hooks/useMatchPicks";
 type Tab = "upcoming" | "completed";
 
 export function MatchesBoard() {
-  const { data: matches, isLoading: matchesLoading } = useMatches();
+  const {
+    data: matches,
+    isLoading: matchesLoading,
+    isError: matchesError,
+    refetch: refetchMatches,
+  } = useMatches();
   const { data: predictions } = usePredictions();
   const { data: matchPicks } = useMatchPicks();
   const { t } = useI18n();
@@ -51,6 +56,22 @@ export function MatchesBoard() {
     );
   }
 
+  // A failed fetch must not look like "no matches yet" — show a recoverable
+  // error with a retry instead of the empty state.
+  if (matchesError) {
+    return (
+      <EmptyState
+        icon={WifiOff}
+        title={t("board.loadError")}
+        description={t("board.loadErrorDesc")}
+      >
+        <Button variant="outline" size="sm" onClick={() => refetchMatches()}>
+          {t("common.retry")}
+        </Button>
+      </EmptyState>
+    );
+  }
+
   if (!matches || matches.length === 0) {
     return (
       <EmptyState
@@ -68,18 +89,18 @@ export function MatchesBoard() {
   return (
     <div className="space-y-5">
       {liveMatches.length > 0 && (
-        <section className="space-y-3 rounded-xl border-2 border-primary/40 bg-primary/5 p-4">
+        <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-bold uppercase tracking-wide text-primary">
+            <span className="live-dot shrink-0" aria-hidden />
+            <h3 className="text-sm font-semibold text-primary">
               {t("board.playingNow")}
             </h3>
-            <span className="text-xs text-muted-foreground">
-              ({liveMatches.length})
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {liveMatches.length}
             </span>
-            <div className="h-px flex-1 bg-primary/20" />
+            <div className="h-px flex-1 bg-primary/30" />
           </div>
-          <div className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {liveMatches.map((match) => (
               <MatchCard
                 key={match.matchId}

@@ -1,9 +1,12 @@
 import "server-only";
 
-import type { Match, MatchStatus, Outcome } from "@/types";
+import type { Match, MatchStatus, Outcome, Scorer } from "@/types";
 
 const FOOTBALL_DATA_URL =
   "https://api.football-data.org/v4/competitions/WC/matches";
+
+const FOOTBALL_SCORERS_URL =
+  "https://api.football-data.org/v4/competitions/WC/scorers";
 
 /** Minimal shape of the football-data.org match payload we consume. */
 interface FdTeam {
@@ -109,4 +112,60 @@ export async function fetchWorldCupMatches(): Promise<Match[]> {
   const data = (await res.json()) as FdResponse;
   const now = new Date();
   return (data.matches ?? []).map((m) => mapMatch(m, now));
+}
+
+/** Minimal shape of the football-data.org scorers payload we consume. */
+interface FdScorer {
+  player: { id: number | null; name: string | null; nationality: string | null } | null;
+  team: { name: string | null; crest: string | null } | null;
+  playedMatches: number | null;
+  goals: number | null;
+  assists: number | null;
+  penalties: number | null;
+}
+
+interface FdScorersResponse {
+  scorers: FdScorer[];
+}
+
+/** Map a raw football-data scorer row to our Firestore `Scorer` shape. */
+export function mapScorer(raw: FdScorer): Scorer {
+  return {
+    playerId: raw.player?.id ?? null,
+    playerName: raw.player?.name ?? "Unknown player",
+    nationality: raw.player?.nationality ?? null,
+    teamName: raw.team?.name ?? "",
+    teamCrest: raw.team?.crest ?? null,
+    goals: raw.goals ?? 0,
+    assists: raw.assists ?? null,
+    penalties: raw.penalties ?? null,
+    playedMatches: raw.playedMatches ?? null,
+  };
+}
+
+/**
+ * Fetch the current World Cup top scorers (default top 10) from
+ * football-data.org. Server-side only — the API token must never reach the
+ * browser. Returns an empty list before the tournament has any goals.
+ */
+export async function fetchWorldCupScorers(limit = 10): Promise<Scorer[]> {
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+  if (!token) {
+    throw new Error("Missing FOOTBALL_DATA_API_TOKEN.");
+  }
+
+  const res = await fetch(`${FOOTBALL_SCORERS_URL}?limit=${limit}`, {
+    headers: { "X-Auth-Token": token },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `football-data.org responded ${res.status} ${res.statusText}: ${body.slice(0, 200)}`
+    );
+  }
+
+  const data = (await res.json()) as FdScorersResponse;
+  return (data.scorers ?? []).map(mapScorer);
 }

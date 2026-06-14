@@ -64,6 +64,7 @@ export function MatchEditor() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search teams…"
+            aria-label="Search teams"
             className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>

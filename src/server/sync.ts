@@ -2,9 +2,15 @@ import "server-only";
 
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { COLLECTIONS, META_DOCS } from "@/lib/constants";
-import { fetchWorldCupMatches } from "@/lib/football/api";
+import { fetchWorldCupMatches, fetchWorldCupScorers } from "@/lib/football/api";
 import { calculateUserPoints } from "@/lib/scoring";
-import type { Match, Prediction, SyncLog, UserProfile } from "@/types";
+import type {
+  Match,
+  Prediction,
+  ScorersDoc,
+  SyncLog,
+  UserProfile,
+} from "@/types";
 
 /**
  * Fetch all World Cup matches from football-data.org and upsert them into
@@ -30,6 +36,24 @@ export async function syncMatchesFromFootballAPI(): Promise<number> {
   if (opsInBatch > 0) await batch.commit();
 
   return matches.length;
+}
+
+/**
+ * Fetch the current top scorers from football-data.org and store them as a
+ * single snapshot at meta/scorers (fully replaced, not merged, so dropped
+ * players don't linger). Returns the number of scorers stored.
+ */
+export async function syncScorersFromFootballAPI(): Promise<number> {
+  const scorers = await fetchWorldCupScorers();
+  const payload: ScorersDoc = {
+    scorers,
+    updatedAt: new Date().toISOString(),
+  };
+  await adminDb
+    .collection(COLLECTIONS.meta)
+    .doc(META_DOCS.scorers)
+    .set(payload);
+  return scorers.length;
 }
 
 /** Record the outcome of a sync run at meta/sync. */

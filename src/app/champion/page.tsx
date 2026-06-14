@@ -74,7 +74,7 @@ export default function ChampionPage() {
 
   return (
     <div className="pitch-gradient min-h-screen">
-      <header className="container flex h-16 items-center justify-between">
+      <header className="container flex h-16 items-center justify-between pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2 font-bold">
           <Trophy className="h-5 w-5 text-primary" />
           WC&nbsp;2026 Predictor
@@ -85,7 +85,7 @@ export default function ChampionPage() {
         </div>
       </header>
 
-      <main className="container max-w-3xl py-6">
+      <main className="container max-w-3xl pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="rounded-xl border bg-background/80 p-6 shadow-sm backdrop-blur sm:p-8">
           <div className="space-y-2 text-center sm:text-left">
             <h1 className="flex items-center justify-center gap-2 text-2xl font-bold tracking-tight sm:justify-start">
@@ -106,6 +106,7 @@ export default function ChampionPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("champion.searchPlaceholder")}
+              aria-label={t("champion.searchPlaceholder")}
               className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
@@ -117,9 +118,10 @@ export default function ChampionPage() {
                 <button
                   key={team.name}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => setSelected(team.name)}
                   className={cn(
-                    "flex items-center gap-2 rounded-lg border p-3 text-left text-sm font-medium transition-colors",
+                    "flex items-center gap-2 rounded-lg border p-3 text-left text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     active
                       ? "border-primary bg-primary/10 ring-2 ring-primary"
                       : "hover:bg-accent"

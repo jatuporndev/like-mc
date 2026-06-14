@@ -83,9 +83,111 @@
   }
 }
 
-/* Subtle pitch-stripe hero background helper */
+/* Matchday hero backdrop: a soft pitch-green glow at the top over very faint
+   mowed-grass stripes. Subtle enough to read as texture, not decoration. */
 .pitch-gradient {
+  background-color: hsl(var(--background));
   background-image:
-    radial-gradient(circle at 50% -20%, hsl(var(--primary) / 0.18), transparent 60%),
-    linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background)));
+    radial-gradient(125% 80% at 50% -25%, hsl(var(--primary) / 0.16), transparent 55%),
+    repeating-linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.022) 0 72px,
+      transparent 72px 144px
+    );
+}
+
+/* Live indicator: a small pulsing dot for the standings panel. */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--primary));
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: hsl(var(--primary));
+}
+
+/* Entrance + ambient motion. Defined only when the user accepts motion, so the
+   reduced-motion path keeps every element at its fully-visible resting state
+   (no class-gated blank reveals). */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .reveal {
+    animation: reveal-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .reveal-2 {
+    animation-delay: 0.09s;
+  }
+  .reveal-3 {
+    animation-delay: 0.18s;
+  }
+  .reveal-4 {
+    animation-delay: 0.27s;
+  }
+
+  @keyframes live-ping {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    70%,
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+  .live-dot::after {
+    animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
+/* Landscape notch: keep the centered container clear of the rounded corners /
+   camera cutout while preserving the 1rem floor in portrait. */
+.container {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Touch input: guarantee a 44px minimum tap target on controls otherwise
+   sized for mouse precision (icon buttons, tabs). Scoped to coarse pointers so
+   mouse / trackpad density is left untouched — detect input, not screen size. */
+@media (pointer: coarse) {
+  button:not(:disabled),
+  [role="tab"] {
+    min-height: 2.75rem;
+  }
+}
+
+/* Reduced motion: collapse decorative transitions/animations to near-instant.
+   Loaders are exempt — a frozen spinner reads as a hung app, so keep genuine
+   progress indicators rotating. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
 }

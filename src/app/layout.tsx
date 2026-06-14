@@ -17,6 +17,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // `cover` lets the layout extend into the notch / rounded-corner area so we
+  // can opt back in with env(safe-area-inset-*) where it matters.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#0b1220" },

@@ -35,6 +35,10 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# claude code / impeccable skills
+.claude
+.impeccable/live/sessions/
+
 # vercel
 .vercel
 

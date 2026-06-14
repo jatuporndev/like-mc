@@ -2,29 +2,28 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Target, Crown, BarChart3 } from "lucide-react";
+import { Target, Crown, Trophy, Lock } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
 import { Leaderboard } from "@/components/leaderboard";
 import { useAuth } from "@/hooks/useAuth";
 
-const FEATURES = [
+const STEPS = [
   {
     icon: Target,
     title: "Predict every match",
-    body: "Call the winner of each World Cup match — home, away, or draw.",
+    body: "Home, draw or away — change your mind right up to kickoff.",
   },
   {
     icon: Crown,
-    title: "Pick your champion",
-    body: "Lock in the nation you think lifts the trophy. One pick, no take-backs.",
+    title: "Crown one champion",
+    body: "A single permanent pick for the team that lifts the trophy.",
   },
   {
-    icon: BarChart3,
-    title: "Climb the leaderboard",
-    body: "Earn a point per correct call and battle your friends for the top spot.",
+    icon: Trophy,
+    title: "Climb the table",
+    body: "A point for every correct call. The leaderboard settles it.",
   },
 ];
 
@@ -37,68 +36,91 @@ export default function LandingPage() {
   }, [user, loading, router]);
 
   return (
-    <div className="pitch-gradient min-h-screen">
-      <header className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2 font-bold">
+    <div className="pitch-gradient flex min-h-screen flex-col">
+      <header className="container flex h-16 shrink-0 items-center justify-between pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center gap-2 font-bold tracking-tight">
           <Trophy className="h-5 w-5 text-primary" />
           WC&nbsp;2026 Predictor
         </div>
         <ThemeToggle />
       </header>
 
-      <main className="container grid gap-12 py-10 lg:grid-cols-2 lg:items-center lg:py-20">
-        {/* Hero */}
-        <section className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
-            <span className="text-base leading-none">🏆</span>
-            FIFA World Cup 2026 · Friends League
-          </div>
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Predict the World Cup.
-            <br />
-            <span className="text-primary">Beat your friends.</span>
-          </h1>
-          <p className="max-w-md text-lg text-muted-foreground">
-            A private prediction game for our little crew. Call the matches,
-            crown your champion, and let the leaderboard settle the bragging
-            rights.
-          </p>
+      <main className="container flex flex-1 items-center pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8 lg:py-16">
+        <div className="grid w-full gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
+          {/* Hero / sign-in */}
+          <section className="space-y-7">
+            <p className="reveal flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="tabular-nums">Jun 11 – Jul 19</span>
+              <span className="h-3 w-px bg-border" aria-hidden />
+              <span>48 nations · one group chat</span>
+            </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <GoogleSignInButton
-              size="lg"
-              variant="default"
-              label="Sign in to play"
-            />
-            <span className="text-sm text-muted-foreground">
-              Google sign-in · invite only
-            </span>
-          </div>
+            <h1 className="reveal reveal-2 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
+              Predict the World Cup.
+              <br />
+              Beat your friends.
+            </h1>
 
-          <div className="grid gap-3 pt-4 sm:grid-cols-3">
-            {FEATURES.map((f) => (
-              <Card key={f.title} className="bg-background/60">
-                <CardContent className="space-y-2 p-4">
-                  <f.icon className="h-5 w-5 text-primary" />
-                  <p className="text-sm font-semibold">{f.title}</p>
-                  <p className="text-xs text-muted-foreground">{f.body}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+            <p className="reveal reveal-2 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+              A private prediction game for our little crew. Call the matches,
+              crown your champion, and let the leaderboard handle the bragging
+              rights.
+            </p>
 
-        {/* Leaderboard preview */}
-        <section className="space-y-3">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold">Current standings</h2>
-          </div>
-          <Leaderboard limit={5} />
-          <p className="text-center text-xs text-muted-foreground">
-            Sign in to see the full table and make your picks.
-          </p>
-        </section>
+            <div className="reveal reveal-3 space-y-3">
+              <GoogleSignInButton
+                size="lg"
+                label="Sign in with Google"
+                className="w-full sm:w-auto"
+              />
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Lock className="h-3.5 w-3.5" />
+                Invite only — we just use your Google name and photo.
+              </p>
+            </div>
+
+            <ol className="reveal reveal-4 divide-y rounded-xl border bg-card">
+              {STEPS.map((step) => (
+                <li key={step.title} className="flex items-start gap-3.5 p-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <step.icon className="h-4 w-4" />
+                  </span>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold leading-tight">
+                      {step.title}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {/* Live standings — the leaderboard's own border is the frame; the
+              header and footnote sit outside it to avoid nesting cards. */}
+          <section className="reveal reveal-4 space-y-3">
+            <div className="flex items-end justify-between">
+              <div>
+                <h2 className="text-base font-bold leading-none">
+                  League standings
+                </h2>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Top of the table right now
+                </p>
+              </div>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                <span className="live-dot" aria-hidden />
+                Live
+              </span>
+            </div>
+
+            <Leaderboard limit={10} />
+
+            <p className="text-center text-xs text-muted-foreground">
+              Sign in to see the full table and lock in your picks.
+            </p>
+          </section>
+        </div>
       </main>
     </div>
   );

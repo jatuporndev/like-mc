@@ -24,12 +24,10 @@ export function MatchDaySection({
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        {isToday && <Flame className="h-4 w-4 text-primary" />}
-        <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-          {label}
-        </h3>
-        <span className="text-xs text-muted-foreground">
-          ({group.matches.length})
+        {isToday && <Flame className="h-4 w-4 shrink-0 text-primary" />}
+        <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {group.matches.length}
         </span>
         <div className="h-px flex-1 bg-border" />
       </div>

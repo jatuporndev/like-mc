@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button, type ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
 /** Inline Google "G" mark. */
@@ -32,6 +33,7 @@ function GoogleIcon() {
 
 export function GoogleSignInButton({
   label = "Continue with Google",
+  className,
   ...props
 }: ButtonProps & { label?: string }) {
   const { signInWithGoogle } = useAuth();
@@ -57,6 +59,13 @@ export function GoogleSignInButton({
       variant="outline"
       onClick={handleClick}
       disabled={loading}
+      // Authentic Google styling: white surface, Google's hairline border and
+      // ink color, kept consistent across light/dark (Google buttons stay white
+      // on dark sites). Roboto-ish system medium weight already applies.
+      className={cn(
+        "border-[#dadce0] bg-white font-medium text-[#3c4043] shadow-sm hover:border-[#d2e3fc] hover:bg-[#f8faff] hover:text-[#3c4043] hover:shadow",
+        className
+      )}
       {...props}
     >
       <GoogleIcon />

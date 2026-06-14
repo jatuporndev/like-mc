@@ -5,6 +5,7 @@ import { handleError, ok } from "@/lib/http";
 import {
   recalculateAllPoints,
   syncMatchesFromFootballAPI,
+  syncScorersFromFootballAPI,
   writeSyncLog,
 } from "@/server/sync";
 
@@ -28,14 +29,23 @@ export async function POST(req: NextRequest) {
     const matchesProcessed = await syncMatchesFromFootballAPI();
     const usersUpdated = await recalculateAllPoints();
 
+    // Top scorers are a nice-to-have side panel; a scorers fetch failure (rate
+    // limit, pre-tournament empty, upstream blip) must not fail the match sync.
+    let scorersProcessed = 0;
+    try {
+      scorersProcessed = await syncScorersFromFootballAPI();
+    } catch {
+      scorersProcessed = 0;
+    }
+
     await writeSyncLog({
       matchesProcessed,
       ok: true,
-      message: `Synced ${matchesProcessed} matches; updated ${usersUpdated} users.`,
+      message: `Synced ${matchesProcessed} matches, ${scorersProcessed} scorers; updated ${usersUpdated} users.`,
       source,
     });
 
-    return ok({ matchesProcessed, usersUpdated, source });
+    return ok({ matchesProcessed, scorersProcessed, usersUpdated, source });
   } catch (error) {
     // Best-effort failure log; ignore secondary errors.
     await writeSyncLog({

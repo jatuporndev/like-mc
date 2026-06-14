@@ -46,6 +46,7 @@ function useInvalidateAll() {
     qc.invalidateQueries({ queryKey: ["leaderboard"] });
     qc.invalidateQueries({ queryKey: ["users"] });
     qc.invalidateQueries({ queryKey: ["sync-log"] });
+    qc.invalidateQueries({ queryKey: ["scorers"] });
   };
 }
 

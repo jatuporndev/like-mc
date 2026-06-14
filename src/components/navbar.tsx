@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogOut, Menu, ShieldCheck, Trophy, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,28 @@ export function Navbar() {
   const { t } = useI18n();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   // Close the mobile menu whenever the route changes.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  // While the mobile menu is open: close on Escape (restoring focus to the
+  // toggle) and move focus into the panel so keyboard users land inside it.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    menuRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   // The page links + admin entry, shared between the desktop bar and the
   // mobile menu. `stack` switches to a full-width, left-aligned layout.
@@ -82,7 +99,7 @@ export function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between gap-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-bold">
           <Trophy className="h-5 w-5 text-primary" />
@@ -112,11 +129,13 @@ export function Navbar() {
 
         {/* Mobile hamburger (below sm) */}
         <Button
+          ref={toggleRef}
           variant="ghost"
           size="icon"
           className="sm:hidden"
-          aria-label="Menu"
+          aria-label={t("nav.menu")}
           aria-expanded={open}
+          aria-controls="mobile-menu"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -134,7 +153,11 @@ export function Navbar() {
             className="fixed inset-x-0 bottom-0 top-14 z-40 cursor-default sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <nav className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-b bg-background p-3 shadow-lg sm:hidden">
+          <nav
+            ref={menuRef}
+            id="mobile-menu"
+            className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-b bg-background p-3 shadow-lg sm:hidden"
+          >
             {user && (
               <div className="flex items-center gap-2 px-1 pb-2">
                 {userAvatar}
