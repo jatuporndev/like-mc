@@ -7,16 +7,19 @@ import { LogOut, ShieldCheck, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Matches" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/dashboard", key: "nav.matches" as const },
+  { href: "/leaderboard", key: "nav.leaderboard" as const },
 ];
 
 export function Navbar() {
   const { user, profile, isAdmin, signOut } = useAuth();
+  const { t } = useI18n();
   const pathname = usePathname();
 
   return (
@@ -39,7 +42,7 @@ export function Navbar() {
                 pathname === link.href && "bg-accent text-accent-foreground"
               )}
             >
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href}>{t(link.key)}</Link>
             </Button>
           ))}
 
@@ -54,11 +57,12 @@ export function Navbar() {
             >
               <Link href="/admin" className="gap-1.5">
                 <ShieldCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin</span>
+                <span className="hidden sm:inline">{t("nav.admin")}</span>
               </Link>
             </Button>
           )}
 
+          <LanguageToggle />
           <ThemeToggle />
 
           {user && (
@@ -74,7 +78,7 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Sign out"
+                aria-label={t("nav.signOut")}
                 onClick={() => signOut()}
               >
                 <LogOut className="h-4 w-4" />

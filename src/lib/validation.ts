@@ -35,7 +35,12 @@ export const adminChampionEditSchema = z.object({
   team: z.union([z.string().min(1).max(60), z.null()]),
 });
 
+export const adminDeleteUserSchema = z.object({
+  uid: z.string().min(1),
+});
+
 export type PredictionInput = z.infer<typeof predictionInputSchema>;
 export type ChampionPickInput = z.infer<typeof championPickInputSchema>;
 export type AdminMatchEdit = z.infer<typeof adminMatchEditSchema>;
 export type AdminChampionEdit = z.infer<typeof adminChampionEditSchema>;
+export type AdminDeleteUser = z.infer<typeof adminDeleteUserSchema>;

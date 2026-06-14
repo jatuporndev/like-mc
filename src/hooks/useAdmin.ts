@@ -10,7 +10,11 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { COLLECTIONS, META_DOCS } from "@/lib/constants";
 import { apiFetch } from "@/lib/api-client";
-import type { AdminChampionEdit, AdminMatchEdit } from "@/lib/validation";
+import type {
+  AdminChampionEdit,
+  AdminDeleteUser,
+  AdminMatchEdit,
+} from "@/lib/validation";
 import type { SyncLog, UserProfile } from "@/types";
 
 /** Latest sync metadata (meta/sync). */
@@ -87,6 +91,21 @@ export function useEditChampionPick() {
         method: "PATCH",
         body: JSON.stringify(input),
       }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteUser() {
+  const invalidate = useInvalidateAll();
+  return useMutation({
+    mutationFn: (input: AdminDeleteUser) =>
+      apiFetch<{ uid: string; predictionsDeleted: number }>(
+        "/api/admin/user",
+        {
+          method: "DELETE",
+          body: JSON.stringify(input),
+        }
+      ),
     onSuccess: invalidate,
   });
 }

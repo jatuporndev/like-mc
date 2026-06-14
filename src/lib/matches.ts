@@ -2,11 +2,20 @@ import { format, isThisYear, isToday, isTomorrow, isYesterday } from "date-fns";
 
 import type { Match } from "@/types";
 
+/**
+ * A day label that the UI can localize. Relative days carry an i18n `key`;
+ * absolute dates are pre-formatted in `text` (and have a null key).
+ */
+export interface DayLabel {
+  key: "day.today" | "day.tomorrow" | "day.yesterday" | null;
+  text: string;
+}
+
 export interface MatchDayGroup {
   /** Stable key (yyyy-MM-dd in local time). */
   key: string;
-  /** Human label: Today / Tomorrow / Jun 18. */
-  label: string;
+  /** Localizable day label: Today / Tomorrow / Jun 18. */
+  label: DayLabel;
   /** Earliest kickoff in the group, for sorting. */
   date: Date;
   matches: Match[];
@@ -16,11 +25,14 @@ export interface MatchDayGroup {
  * Build a friendly day label for a kickoff date.
  *   Today · Tomorrow · Yesterday · "Jun 18" · "Jun 18, 2027"
  */
-export function formatMatchDayLabel(date: Date): string {
-  if (isToday(date)) return "Today";
-  if (isTomorrow(date)) return "Tomorrow";
-  if (isYesterday(date)) return "Yesterday";
-  return isThisYear(date) ? format(date, "MMM d") : format(date, "MMM d, yyyy");
+export function formatMatchDayLabel(date: Date): DayLabel {
+  if (isToday(date)) return { key: "day.today", text: "Today" };
+  if (isTomorrow(date)) return { key: "day.tomorrow", text: "Tomorrow" };
+  if (isYesterday(date)) return { key: "day.yesterday", text: "Yesterday" };
+  const text = isThisYear(date)
+    ? format(date, "MMM d")
+    : format(date, "MMM d, yyyy");
+  return { key: null, text };
 }
 
 /** Local-time yyyy-MM-dd key, used to bucket matches into a single day. */

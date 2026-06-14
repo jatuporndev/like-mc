@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { SyncPanel } from "@/components/admin/sync-panel";
 import { MatchEditor } from "@/components/admin/match-editor";
 import { ChampionEditor } from "@/components/admin/champion-editor";
+import { UserManager } from "@/components/admin/user-manager";
 
 export default function AdminPage() {
   return (
@@ -22,6 +23,8 @@ export default function AdminPage() {
           <MatchEditor />
           <ChampionEditor />
         </div>
+
+        <UserManager />
       </div>
     </AppShell>
   );

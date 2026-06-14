@@ -1,6 +1,6 @@
 import "server-only";
 
-import { adminDb } from "@/lib/firebase/admin";
+import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { COLLECTIONS, META_DOCS } from "@/lib/constants";
 import { fetchWorldCupMatches } from "@/lib/football/api";
 import { calculateUserPoints } from "@/lib/scoring";
@@ -99,4 +99,47 @@ export async function recalculateAllPoints(): Promise<number> {
 
   if (opsInBatch > 0) await batch.commit();
   return updated;
+}
+
+/**
+ * Permanently remove a user from the game: their predictions, their profile
+ * document, and their Firebase Auth account (so the same Google login can't
+ * silently re-create the profile on next sign-in).
+ *
+ * Predictions are deleted in batches (Firestore caps batches at 500 ops). The
+ * Auth deletion is best-effort — if the account is already gone we still want
+ * the Firestore cleanup to count as success. Returns the number of predictions
+ * removed.
+ */
+export async function deleteUserCompletely(uid: string): Promise<number> {
+  const predictionsSnap = await adminDb
+    .collection(COLLECTIONS.predictions)
+    .where("userId", "==", uid)
+    .get();
+
+  let batch = adminDb.batch();
+  let opsInBatch = 0;
+
+  for (const predictionDoc of predictionsSnap.docs) {
+    batch.delete(predictionDoc.ref);
+    opsInBatch += 1;
+    if (opsInBatch === 450) {
+      await batch.commit();
+      batch = adminDb.batch();
+      opsInBatch = 0;
+    }
+  }
+
+  batch.delete(adminDb.collection(COLLECTIONS.users).doc(uid));
+  await batch.commit();
+
+  try {
+    await adminAuth.deleteUser(uid);
+  } catch (error) {
+    // auth/user-not-found just means the account was already removed.
+    const code = (error as { code?: string })?.code;
+    if (code !== "auth/user-not-found") throw error;
+  }
+
+  return predictionsSnap.size;
 }

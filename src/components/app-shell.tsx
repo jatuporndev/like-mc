@@ -3,13 +3,12 @@
 import { type ReactNode } from "react";
 
 import { Navbar } from "@/components/navbar";
-import { ChampionBanner } from "@/components/champion-banner";
-import { ChampionPickModal } from "@/components/champion-pick-modal";
 import { AuthGate } from "@/components/auth-gate";
 
 /**
- * Wraps every authenticated page: navbar, the always-on champion banner, the
- * mandatory champion-pick modal, and the auth/admin route guard.
+ * Wraps every authenticated page: navbar and the auth/admin route guard. The
+ * mandatory champion pick now lives on its own `/champion` page; AuthGate
+ * redirects unpicked users there, and the dashboard header shows the pick.
  */
 export function AppShell({
   children,
@@ -21,8 +20,6 @@ export function AppShell({
   return (
     <AuthGate adminOnly={adminOnly}>
       <Navbar />
-      <ChampionBanner />
-      <ChampionPickModal />
       <main className="container py-6">{children}</main>
     </AuthGate>
   );

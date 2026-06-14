@@ -61,7 +61,15 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        // "Twemoji Country Flags" (injected by country-flag-emoji-polyfill)
+        // contains only flag glyphs, so all other text falls through to Inter.
+        // This makes flag emoji render on Windows browsers.
+        sans: [
+          "Twemoji Country Flags",
+          "var(--font-sans)",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       keyframes: {
         "accordion-down": {

@@ -21,13 +21,14 @@ export const POINTS_PER_CORRECT = 1;
 /**
  * Candidate champion teams shown in the picker.
  *
- * The official 48-team field isn't fully known until the draw, so this list is
- * a curated set of likely contenders. Admins can extend it freely — a champion
- * pick is just a stored team name, not a foreign key.
+ * The official 48-team field isn't fully known until the draw, so this is a
+ * broad list of FIFA national teams (every realistic contender plus the wider
+ * field). The picker has a local search box, so a long list is fine. Admins can
+ * extend it freely — a champion pick is just a stored team name, not a foreign
+ * key.
  */
 export const CHAMPION_TEAMS: { name: string; flag: string }[] = [
-  { name: "Argentina", flag: "🇦🇷" },
-  { name: "Brazil", flag: "🇧🇷" },
+  // --- UEFA (Europe) ---
   { name: "France", flag: "🇫🇷" },
   { name: "England", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
   { name: "Spain", flag: "🇪🇸" },
@@ -37,15 +38,85 @@ export const CHAMPION_TEAMS: { name: string; flag: string }[] = [
   { name: "Belgium", flag: "🇧🇪" },
   { name: "Italy", flag: "🇮🇹" },
   { name: "Croatia", flag: "🇭🇷" },
+  { name: "Denmark", flag: "🇩🇰" },
+  { name: "Switzerland", flag: "🇨🇭" },
+  { name: "Austria", flag: "🇦🇹" },
+  { name: "Poland", flag: "🇵🇱" },
+  { name: "Ukraine", flag: "🇺🇦" },
+  { name: "Sweden", flag: "🇸🇪" },
+  { name: "Serbia", flag: "🇷🇸" },
+  { name: "Turkey", flag: "🇹🇷" },
+  { name: "Norway", flag: "🇳🇴" },
+  { name: "Scotland", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+  { name: "Wales", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" },
+  { name: "Czechia", flag: "🇨🇿" },
+  { name: "Hungary", flag: "🇭🇺" },
+  { name: "Romania", flag: "🇷🇴" },
+  { name: "Greece", flag: "🇬🇷" },
+  { name: "Slovenia", flag: "🇸🇮" },
+  { name: "Slovakia", flag: "🇸🇰" },
+  { name: "Republic of Ireland", flag: "🇮🇪" },
+  { name: "Iceland", flag: "🇮🇸" },
+  { name: "Finland", flag: "🇫🇮" },
+  { name: "Albania", flag: "🇦🇱" },
+  { name: "Bosnia and Herzegovina", flag: "🇧🇦" },
+  { name: "North Macedonia", flag: "🇲🇰" },
+  { name: "Georgia", flag: "🇬🇪" },
+
+  // --- CONMEBOL (South America) ---
+  { name: "Argentina", flag: "🇦🇷" },
+  { name: "Brazil", flag: "🇧🇷" },
   { name: "Uruguay", flag: "🇺🇾" },
-  { name: "Mexico", flag: "🇲🇽" },
+  { name: "Colombia", flag: "🇨🇴" },
+  { name: "Ecuador", flag: "🇪🇨" },
+  { name: "Peru", flag: "🇵🇪" },
+  { name: "Chile", flag: "🇨🇱" },
+  { name: "Paraguay", flag: "🇵🇾" },
+  { name: "Venezuela", flag: "🇻🇪" },
+  { name: "Bolivia", flag: "🇧🇴" },
+
+  // --- CONCACAF (North/Central America & Caribbean) ---
   { name: "USA", flag: "🇺🇸" },
+  { name: "Mexico", flag: "🇲🇽" },
   { name: "Canada", flag: "🇨🇦" },
-  { name: "Japan", flag: "🇯🇵" },
-  { name: "Korea Republic", flag: "🇰🇷" },
+  { name: "Costa Rica", flag: "🇨🇷" },
+  { name: "Panama", flag: "🇵🇦" },
+  { name: "Jamaica", flag: "🇯🇲" },
+  { name: "Honduras", flag: "🇭🇳" },
+  { name: "El Salvador", flag: "🇸🇻" },
+  { name: "Guatemala", flag: "🇬🇹" },
+
+  // --- CAF (Africa) ---
   { name: "Morocco", flag: "🇲🇦" },
   { name: "Senegal", flag: "🇸🇳" },
-  { name: "Colombia", flag: "🇨🇴" },
+  { name: "Nigeria", flag: "🇳🇬" },
+  { name: "Egypt", flag: "🇪🇬" },
+  { name: "Algeria", flag: "🇩🇿" },
+  { name: "Tunisia", flag: "🇹🇳" },
+  { name: "Ghana", flag: "🇬🇭" },
+  { name: "Ivory Coast", flag: "🇨🇮" },
+  { name: "Cameroon", flag: "🇨🇲" },
+  { name: "Mali", flag: "🇲🇱" },
+  { name: "South Africa", flag: "🇿🇦" },
+  { name: "Cape Verde", flag: "🇨🇻" },
+  { name: "Burkina Faso", flag: "🇧🇫" },
+  { name: "DR Congo", flag: "🇨🇩" },
+
+  // --- AFC (Asia) ---
+  { name: "Japan", flag: "🇯🇵" },
+  { name: "Korea Republic", flag: "🇰🇷" },
+  { name: "Iran", flag: "🇮🇷" },
+  { name: "Australia", flag: "🇦🇺" },
+  { name: "Saudi Arabia", flag: "🇸🇦" },
+  { name: "Qatar", flag: "🇶🇦" },
+  { name: "Iraq", flag: "🇮🇶" },
+  { name: "United Arab Emirates", flag: "🇦🇪" },
+  { name: "Uzbekistan", flag: "🇺🇿" },
+  { name: "Jordan", flag: "🇯🇴" },
+  { name: "China PR", flag: "🇨🇳" },
+
+  // --- OFC (Oceania) ---
+  { name: "New Zealand", flag: "🇳🇿" },
 ];
 
 /** Find a flag emoji for a team name, falling back to a trophy. */

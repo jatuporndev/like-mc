@@ -12,14 +12,11 @@ import { formatKickoffTime } from "@/lib/matches";
 import { calculatePredictionResult, lockPrediction } from "@/lib/scoring";
 import { useSubmitPrediction } from "@/hooks/usePredictions";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n/context";
 import type { PickWithUser } from "@/hooks/useMatchPicks";
 import type { Match, Outcome, Prediction } from "@/types";
 
-const OPTIONS: { value: Outcome; label: string }[] = [
-  { value: "HOME_TEAM", label: "Home" },
-  { value: "DRAW", label: "Draw" },
-  { value: "AWAY_TEAM", label: "Away" },
-];
+const OUTCOMES: Outcome[] = ["HOME_TEAM", "DRAW", "AWAY_TEAM"];
 
 export function MatchCard({
   match,
@@ -32,6 +29,7 @@ export function MatchCard({
 }) {
   const submit = useSubmitPrediction();
   const { user } = useAuth();
+  const { t } = useI18n();
   const locked = lockPrediction(match);
   const picked = prediction?.pickedTeam;
   const result = calculatePredictionResult(picked, match);
@@ -45,8 +43,8 @@ export function MatchCard({
       { matchId: match.matchId, pickedTeam: value },
       {
         onError: (err) =>
-          toast.error("Could not save prediction", {
-            description: err instanceof Error ? err.message : "Try again.",
+          toast.error(t("match.saveError"), {
+            description: err instanceof Error ? err.message : t("match.tryAgain"),
           }),
       }
     );
@@ -58,7 +56,9 @@ export function MatchCard({
       <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">
         <span className="truncate">
           {match.stage.replaceAll("_", " ")}
-          {match.group ? ` · ${match.group.replace("GROUP_", "Group ")}` : ""}
+          {match.group
+            ? ` · ${match.group.replace("GROUP_", `${t("board.group")} `)}`
+            : ""}
         </span>
         <span className="flex items-center gap-1">
           {locked && <Lock className="h-3 w-3" />}
@@ -81,7 +81,9 @@ export function MatchCard({
               {match.homeScore}–{match.awayScore}
             </span>
           ) : (
-            <span className="text-sm font-medium text-muted-foreground">vs</span>
+            <span className="text-sm font-medium text-muted-foreground">
+              {t("match.vs")}
+            </span>
           )}
         </div>
 
@@ -95,15 +97,15 @@ export function MatchCard({
 
       {/* Prediction controls */}
       <div className="grid grid-cols-3 gap-2 px-4 pb-3">
-        {OPTIONS.map((opt) => {
-          const isPicked = picked === opt.value;
-          const isWinner = match.winner === opt.value;
+        {OUTCOMES.map((outcome) => {
+          const isPicked = picked === outcome;
+          const isWinner = match.winner === outcome;
           return (
             <button
-              key={opt.value}
+              key={outcome}
               type="button"
               disabled={locked}
-              onClick={() => choose(opt.value)}
+              onClick={() => choose(outcome)}
               className={cn(
                 "rounded-md border py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed",
                 isPicked
@@ -114,11 +116,11 @@ export function MatchCard({
                 locked && !isPicked && "opacity-60"
               )}
             >
-              {opt.value === "HOME_TEAM"
+              {outcome === "HOME_TEAM"
                 ? match.homeTeamShort
-                : opt.value === "AWAY_TEAM"
+                : outcome === "AWAY_TEAM"
                   ? match.awayTeamShort
-                  : opt.label}
+                  : t("match.draw")}
             </button>
           );
         })}
@@ -142,6 +144,7 @@ function PicksRow({
   currentUid?: string;
   winner: Outcome | null;
 }) {
+  const { t } = useI18n();
   if (picks.length === 0) return null;
 
   const byOption: Record<Outcome, PickWithUser[]> = {
@@ -153,11 +156,11 @@ function PicksRow({
 
   return (
     <div className="grid grid-cols-3 gap-2 border-t bg-muted/30 px-4 py-2">
-      {OPTIONS.map((opt) => {
-        const players = byOption[opt.value];
-        const isWinner = winner === opt.value;
+      {OUTCOMES.map((outcome) => {
+        const players = byOption[outcome];
+        const isWinner = winner === outcome;
         return (
-          <div key={opt.value} className="flex flex-col items-center gap-1">
+          <div key={outcome} className="flex flex-col items-center gap-1">
             {players.length === 0 ? (
               <span className="text-[10px] text-muted-foreground/60">—</span>
             ) : (
@@ -181,7 +184,7 @@ function PicksRow({
                   </Avatar>
                   <span className="truncate text-[10px] font-medium">
                     {p.uid === currentUid
-                      ? "You"
+                      ? t("match.you")
                       : p.displayName.split(" ")[0]}
                   </span>
                 </div>
@@ -203,35 +206,34 @@ function Footer({
   hasPick: boolean;
   result: ReturnType<typeof calculatePredictionResult>;
 }) {
+  const { t } = useI18n();
   if (result === "correct") {
     return (
       <div className="flex items-center gap-1.5 border-t bg-success/10 px-4 py-2 text-sm font-medium text-success">
-        <CheckCircle2 className="h-4 w-4" /> Correct prediction · +1
+        <CheckCircle2 className="h-4 w-4" /> {t("match.correct")}
       </div>
     );
   }
   if (result === "wrong") {
     return (
       <div className="flex items-center gap-1.5 border-t bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
-        <XCircle className="h-4 w-4" /> Wrong prediction
+        <XCircle className="h-4 w-4" /> {t("match.wrong")}
       </div>
     );
   }
   if (locked) {
     return (
       <div className="border-t px-4 py-2 text-xs text-muted-foreground">
-        {hasPick
-          ? "Locked · awaiting result"
-          : "Locked · no prediction made"}
+        {hasPick ? t("match.lockedAwaiting") : t("match.lockedNoPick")}
       </div>
     );
   }
   return (
     <div className="border-t px-4 py-2 text-xs text-muted-foreground">
       {hasPick ? (
-        <Badge variant="secondary">Prediction saved</Badge>
+        <Badge variant="secondary">{t("match.saved")}</Badge>
       ) : (
-        "Make your prediction before kickoff"
+        t("match.makePrediction")
       )}
     </div>
   );

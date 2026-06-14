@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { groupMatchesByDate, partitionMatches } from "@/lib/matches";
+import { useI18n } from "@/lib/i18n/context";
 import { useMatches } from "@/hooks/useMatches";
 import { usePredictions } from "@/hooks/usePredictions";
 import { useMatchPicks } from "@/hooks/useMatchPicks";
@@ -19,6 +20,7 @@ export function MatchesBoard() {
   const { data: matches, isLoading: matchesLoading } = useMatches();
   const { data: predictions } = usePredictions();
   const { data: matchPicks } = useMatchPicks();
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("upcoming");
 
   const { upcomingGroups, completedGroups } = useMemo(() => {
@@ -45,8 +47,8 @@ export function MatchesBoard() {
     return (
       <EmptyState
         icon={CalendarClock}
-        title="No matches yet"
-        description="Matches appear here once an admin runs the first sync from football-data.org."
+        title={t("board.noMatches")}
+        description={t("board.noMatchesDesc")}
       />
     );
   }
@@ -62,14 +64,14 @@ export function MatchesBoard() {
           active={tab === "upcoming"}
           onClick={() => setTab("upcoming")}
           icon={<CalendarClock className="h-4 w-4" />}
-          label="Upcoming"
+          label={t("board.upcoming")}
           count={upcomingGroups.reduce((n, g) => n + g.matches.length, 0)}
         />
         <TabButton
           active={tab === "completed"}
           onClick={() => setTab("completed")}
           icon={<CalendarCheck2 className="h-4 w-4" />}
-          label="Completed"
+          label={t("board.completed")}
           count={completedGroups.reduce((n, g) => n + g.matches.length, 0)}
         />
       </div>
@@ -79,13 +81,13 @@ export function MatchesBoard() {
           icon={tab === "upcoming" ? CalendarClock : CalendarCheck2}
           title={
             tab === "upcoming"
-              ? "No upcoming matches"
-              : "No completed matches yet"
+              ? t("board.noUpcoming")
+              : t("board.noCompleted")
           }
           description={
             tab === "upcoming"
-              ? "All scheduled matches have kicked off."
-              : "Played matches will show up here with results."
+              ? t("board.noUpcomingDesc")
+              : t("board.noCompletedDesc")
           }
         />
       ) : (
