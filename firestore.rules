@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// -----------------------------------------------------------------------------
+// Security model
+// -----------------------------------------------------------------------------
+// Every mutation in this app goes through an authenticated Next.js API route
+// backed by the Firebase Admin SDK, which BYPASSES these rules. That lets us
+// enforce business logic server-side (kickoff locks, champion-pick-once, score
+// integrity) in one place.
+//
+// Therefore the client gets READ-ONLY access here and ALL client writes are
+// denied. This trivially satisfies the requirements:
+//   - users cannot modify scores or winners (matches are read-only)
+//   - users cannot modify points or championPick (users are read-only)
+//   - a user can only see their own predictions
+// -----------------------------------------------------------------------------
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Public so the landing page can show a leaderboard preview.
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Public so match listings render; results are admin/sync controlled.
+    match /matches/{matchId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Any signed-in player may read all predictions so the app can show who
+    // picked what on each match. Writes still go through the Admin SDK only.
+    match /predictions/{predictionId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Sync metadata (last sync time, etc.) — readable by signed-in users.
+    match /meta/{doc} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

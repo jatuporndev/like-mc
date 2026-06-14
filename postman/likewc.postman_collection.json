@@ -1,0 +1,127 @@
+{
+  "info": {
+    "name": "WC 2026 Predictor",
+    "_postman_id": "likewc-2026-predictor",
+    "description": "API collection for the WC 2026 Predictor app.\n\n## Auth\nMost routes require a **Firebase ID token** (a logged-in user). The sync route also accepts the **SYNC_SECRET** bearer token (machine-to-machine).\n\n### Getting an ID token (`idToken`)\nFirebase Google login can't be done in Postman. Instead:\n1. Run the app (`npm run dev`) and sign in with Google.\n2. Open DevTools → Network tab.\n3. Find the `me` request (POST /api/me) → Headers → Request Headers.\n4. Copy the value after `Authorization: Bearer ` and paste it into the environment variable `idToken`.\n\nID tokens expire after ~1 hour — re-copy when you get 401s.\n\n### Variables\n- `baseUrl`   e.g. http://localhost:3000\n- `idToken`   Firebase ID token (admin user, for protected routes)\n- `syncSecret` value of SYNC_SECRET (for the sync route only)\n- `matchId`   a real match id to predict on (get one from a GET of Firestore / the dashboard)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{idToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "matchId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Upsert + get my profile",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/me", "host": ["{{baseUrl}}"], "path": ["api", "me"] },
+            "description": "Creates the user profile on first call, then returns it. Requires `idToken`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predictions",
+      "item": [
+        {
+          "name": "Submit / update a match prediction",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": \"{{matchId}}\",\n  \"pickedTeam\": \"HOME_TEAM\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/predictions", "host": ["{{baseUrl}}"], "path": ["api", "predictions"] },
+            "description": "pickedTeam ∈ HOME_TEAM | DRAW | AWAY_TEAM. Rejected (409) after kickoff. Requires `idToken`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Champion",
+      "item": [
+        {
+          "name": "Set my champion pick (once)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"team\": \"Brazil\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/champion-pick", "host": ["{{baseUrl}}"], "path": ["api", "champion-pick"] },
+            "description": "Permanent — returns 409 if already set. Requires `idToken`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Sync matches (SYNC_SECRET)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{syncSecret}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/sync-matches", "host": ["{{baseUrl}}"], "path": ["api", "admin", "sync-matches"] },
+            "description": "Pulls World Cup matches from football-data.org and recalculates points.\n\nUses the `syncSecret` bearer token — no login needed. This is the easiest route to test in Postman."
+          }
+        },
+        {
+          "name": "Sync matches (admin user token)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/sync-matches", "host": ["{{baseUrl}}"], "path": ["api", "admin", "sync-matches"] },
+            "description": "Same route, authorized via an admin user's `idToken` instead of the secret."
+          }
+        },
+        {
+          "name": "Recalculate points (admin)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/admin/recalculate-points", "host": ["{{baseUrl}}"], "path": ["api", "admin", "recalculate-points"] },
+            "description": "Recomputes every user's points. Requires an ADMIN `idToken`."
+          }
+        },
+        {
+          "name": "Edit a match (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": \"{{matchId}}\",\n  \"winner\": \"HOME_TEAM\",\n  \"homeScore\": 2,\n  \"awayScore\": 1,\n  \"status\": \"FINISHED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/match", "host": ["{{baseUrl}}"], "path": ["api", "admin", "match"] },
+            "description": "Manual override; recalculates points after saving. All fields except matchId are optional. Requires an ADMIN `idToken`."
+          }
+        },
+        {
+          "name": "Override a user's champion pick (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"FIREBASE_USER_UID\",\n  \"team\": \"France\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/champion", "host": ["{{baseUrl}}"], "path": ["api", "admin", "champion"] },
+            "description": "Set `team` to null to clear a pick and let the user re-choose. Requires an ADMIN `idToken`."
+          }
+        }
+      ]
+    }
+  ]
+}
