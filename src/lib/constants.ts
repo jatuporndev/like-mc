@@ -19,6 +19,32 @@ export function predictionId(userId: string, matchId: string): string {
 export const POINTS_PER_CORRECT = 1;
 
 /**
+ * Bonus points awarded for how far a user's champion pick advanced. Tiered:
+ * the furthest round the picked team reaches decides the bonus, so a pick that
+ * wins the trophy earns `WINNER` (not WINNER + every lower tier). A losing
+ * finalist earns `FINAL`, a beaten semi-finalist `SEMI_FINAL`, and so on.
+ */
+export const CHAMPION_BONUS = {
+  WINNER: 10,
+  FINAL: 5,
+  SEMI_FINAL: 3,
+  QUARTER_FINAL: 1,
+} as const;
+
+/**
+ * football-data.org knockout `stage` values, ranked by how deep they are. Used
+ * to find the furthest round a team reached. `GROUP_STAGE` and
+ * `THIRD_PLACE` are intentionally excluded — a third-place play-off team is
+ * already credited for reaching the semi-final via its SEMI_FINALS match.
+ */
+export const KNOCKOUT_STAGE_RANK: Record<string, number> = {
+  LAST_16: 1,
+  QUARTER_FINALS: 2,
+  SEMI_FINALS: 3,
+  FINAL: 4,
+} as const;
+
+/**
  * Candidate champion teams shown in the picker.
  *
  * The official 48-team field isn't fully known until the draw, so this is a

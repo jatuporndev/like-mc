@@ -59,3 +59,40 @@ export async function POST(req: NextRequest) {
     return handleError(error);
   }
 }
+
+/**
+ * Remove the signed-in user's prediction for a match (i.e. unselect).
+ * Allowed only before kickoff — the same lock that blocks creating/editing a
+ * pick blocks clearing one, so a result can't be gamed after the fact.
+ * Idempotent: deleting a non-existent prediction succeeds.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const decoded = await requireUser(req);
+    const matchId = req.nextUrl.searchParams.get("matchId");
+    if (!matchId) {
+      throw new HttpError(400, "matchId is required.");
+    }
+
+    const matchSnap = await adminDb
+      .collection(COLLECTIONS.matches)
+      .doc(matchId)
+      .get();
+    if (!matchSnap.exists) {
+      throw new HttpError(404, "Match not found.");
+    }
+
+    if (lockPrediction(matchSnap.data() as Match)) {
+      throw new HttpError(409, "This match is locked — kickoff has passed.");
+    }
+
+    await adminDb
+      .collection(COLLECTIONS.predictions)
+      .doc(predictionId(decoded.uid, matchId))
+      .delete();
+
+    return ok({ matchId });
+  } catch (error) {
+    return handleError(error);
+  }
+}

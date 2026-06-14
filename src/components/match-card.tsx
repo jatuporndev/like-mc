@@ -10,7 +10,7 @@ import { TeamCrest } from "@/components/team-crest";
 import { cn } from "@/lib/utils";
 import { formatKickoffTime } from "@/lib/matches";
 import { calculatePredictionResult, lockPrediction } from "@/lib/scoring";
-import { useSubmitPrediction } from "@/hooks/usePredictions";
+import { useDeletePrediction, useSubmitPrediction } from "@/hooks/usePredictions";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n/context";
 import type { PickWithUser } from "@/hooks/useMatchPicks";
@@ -28,6 +28,7 @@ export function MatchCard({
   picks?: PickWithUser[];
 }) {
   const submit = useSubmitPrediction();
+  const remove = useDeletePrediction();
   const { user } = useAuth();
   const { t } = useI18n();
   const locked = lockPrediction(match);
@@ -36,18 +37,20 @@ export function MatchCard({
   const hasScore = match.homeScore !== null && match.awayScore !== null;
 
   function choose(value: Outcome) {
-    if (locked || value === picked) return;
-    // Fire-and-forget: the optimistic update reflects the pick instantly and
-    // rolls back automatically (with a toast) if the request fails.
-    submit.mutate(
-      { matchId: match.matchId, pickedTeam: value },
-      {
-        onError: (err) =>
-          toast.error(t("match.saveError"), {
-            description: err instanceof Error ? err.message : t("match.tryAgain"),
-          }),
-      }
-    );
+    if (locked) return;
+    const onError = (err: unknown) =>
+      toast.error(t("match.saveError"), {
+        description: err instanceof Error ? err.message : t("match.tryAgain"),
+      });
+
+    // Clicking the already-picked option clears it (unselect). Otherwise set
+    // the new pick. Both are fire-and-forget: the optimistic update reflects
+    // the change instantly and rolls back (with a toast) if the request fails.
+    if (value === picked) {
+      remove.mutate(match.matchId, { onError });
+    } else {
+      submit.mutate({ matchId: match.matchId, pickedTeam: value }, { onError });
+    }
   }
 
   return (

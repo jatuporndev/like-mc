@@ -79,6 +79,8 @@ export interface LeaderboardEntry {
   displayName: string;
   photoURL: string | null;
   points: number;
+  /** Portion of `points` earned from the tiered champion-pick bonus. */
+  championBonus: number;
   championPick: string | null;
   rank: number;
 }

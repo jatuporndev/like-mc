@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { flagForTeam } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n/context";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import type { LeaderboardEntry } from "@/types";
 
@@ -37,6 +38,7 @@ export function Leaderboard({
   showChampion?: boolean;
 }) {
   const { user } = useAuth();
+  const { t } = useI18n();
   const { data, isLoading } = useLeaderboard();
 
   if (isLoading) {
@@ -96,13 +98,25 @@ export function Leaderboard({
               {showChampion && entry.championPick && (
                 <p className="truncate text-xs text-muted-foreground">
                   {flagForTeam(entry.championPick)} {entry.championPick}
+                  {entry.championBonus > 0 && (
+                    <span className="ml-1 font-semibold text-primary">
+                      +{entry.championBonus} 🏆
+                    </span>
+                  )}
                 </p>
               )}
             </div>
 
-            <Badge variant={entry.rank === 1 ? "default" : "secondary"}>
-              {entry.points} pt{entry.points === 1 ? "" : "s"}
-            </Badge>
+            <div className="flex flex-col items-end gap-0.5">
+              <Badge variant={entry.rank === 1 ? "default" : "secondary"}>
+                {entry.points} pt{entry.points === 1 ? "" : "s"}
+              </Badge>
+              {entry.championBonus > 0 && (
+                <span className="text-[10px] leading-none text-muted-foreground">
+                  +{entry.championBonus} {t("lb.bonus")}
+                </span>
+              )}
+            </div>
           </li>
         );
       })}

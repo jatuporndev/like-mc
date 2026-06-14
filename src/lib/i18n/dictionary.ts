@@ -46,11 +46,13 @@ const en = {
   "dash.matches": "Matches",
   "dash.leaderboard": "Leaderboard",
   "dash.viewAll": "View all",
+  "dash.championBonus": "champion bonus",
 
   // Leaderboard page
   "lb.title": "Leaderboard",
   "lb.subtitle":
-    "One point per correct match prediction. Champion bonus points may be awarded at the end of the tournament.",
+    "One point per correct match prediction, plus champion bonus points for how far your champion pick advances (final +5, semi +3, quarter +1, winner +10).",
+  "lb.bonus": "champion bonus",
 
   // Match day labels
   "day.today": "Today",
@@ -121,11 +123,13 @@ const th: Record<MessageKey, string> = {
   "dash.matches": "แมตช์",
   "dash.leaderboard": "ตารางคะแนน",
   "dash.viewAll": "ดูทั้งหมด",
+  "dash.championBonus": "โบนัสทีมแชมป์",
 
   // Leaderboard page
   "lb.title": "ตารางคะแนน",
   "lb.subtitle":
-    "ทายผลถูกได้แมตช์ละ 1 คะแนน อาจมีคะแนนโบนัสจากทีมแชมป์เมื่อจบทัวร์นาเมนต์",
+    "ทายผลถูกได้แมตช์ละ 1 คะแนน บวกคะแนนโบนัสตามรอบที่ทีมแชมป์ที่เลือกไปถึง (รอบชิง +5, รองชนะเลิศ +3, ก่อนรองฯ +1, ชนะเลิศ +10)",
+  "lb.bonus": "โบนัสทีมแชมป์",
 
   // Match day labels
   "day.today": "วันนี้",

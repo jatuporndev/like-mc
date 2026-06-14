@@ -131,3 +131,69 @@ export function useSubmitPrediction() {
     },
   });
 }
+
+/**
+ * Clear the signed-in user's prediction for a match (unselect). Mirrors
+ * {@link useSubmitPrediction}'s optimistic pattern: the pick disappears from
+ * both caches immediately and is restored on error. Server enforces the same
+ * kickoff lock as submitting.
+ */
+export function useDeletePrediction() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const predKey = ["predictions", user?.uid];
+  const picksKey = ["match-picks"];
+
+  return useMutation<{ matchId: string }, Error, string, SubmitContext>({
+    mutationFn: (matchId) =>
+      apiFetch<{ matchId: string }>(
+        `/api/predictions?matchId=${encodeURIComponent(matchId)}`,
+        { method: "DELETE" }
+      ),
+
+    onMutate: async (matchId) => {
+      if (!user) return {};
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: predKey }),
+        queryClient.cancelQueries({ queryKey: picksKey }),
+      ]);
+
+      const prevPreds = queryClient.getQueryData<PredictionMap>(predKey);
+      const prevPicks = queryClient.getQueryData<MatchPicks>(picksKey);
+
+      // Optimistically drop the pick from the user's own prediction map.
+      queryClient.setQueryData<PredictionMap>(predKey, (old) => {
+        if (!old) return old;
+        const map = { ...old };
+        delete map[matchId];
+        return map;
+      });
+
+      // Optimistically drop the user from the shared per-match picks list.
+      queryClient.setQueryData<MatchPicks>(picksKey, (old) => {
+        if (!old) return old;
+        const map = { ...old };
+        const list = (map[matchId] ?? []).filter((p) => p.uid !== user.uid);
+        if (list.length) map[matchId] = list;
+        else delete map[matchId];
+        return map;
+      });
+
+      return { prevPreds, prevPicks };
+    },
+
+    onError: (_err, _matchId, ctx) => {
+      if (ctx?.prevPreds !== undefined) {
+        queryClient.setQueryData(predKey, ctx.prevPreds);
+      }
+      if (ctx?.prevPicks !== undefined) {
+        queryClient.setQueryData(picksKey, ctx.prevPicks);
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: predKey });
+    },
+  });
+}

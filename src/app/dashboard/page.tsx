@@ -9,6 +9,7 @@ import { Leaderboard } from "@/components/leaderboard";
 import { LastSyncBadge } from "@/components/last-sync-badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { flagForTeam } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -23,8 +24,11 @@ export default function DashboardPage() {
 function DashboardContent() {
   const { profile } = useAuth();
   const { t } = useI18n();
+  const { data: leaderboard } = useLeaderboard();
   const firstName = profile?.displayName?.split(" ")[0] ?? "there";
   const points = profile?.points ?? 0;
+  const championBonus =
+    leaderboard?.find((e) => e.uid === profile?.uid)?.championBonus ?? 0;
 
   return (
     <div className="space-y-8">
@@ -36,8 +40,14 @@ function DashboardContent() {
           <p className="text-sm text-muted-foreground">
             {t("dash.pointsPre")}{" "}
             <span className="font-semibold text-foreground">{points}</span>{" "}
-            {points === 1 ? t("dash.point") : t("dash.points")}.{" "}
-            {t("dash.pointsPost")}
+            {points === 1 ? t("dash.point") : t("dash.points")}
+            {championBonus > 0 && (
+              <span className="text-primary">
+                {" "}
+                (+{championBonus} {t("dash.championBonus")} 🏆)
+              </span>
+            )}
+            . {t("dash.pointsPost")}
           </p>
           {profile?.championPick && (
             <div className="mt-1.5 flex items-center gap-1.5 text-sm">

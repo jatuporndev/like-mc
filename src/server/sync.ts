@@ -80,7 +80,7 @@ export async function recalculateAllPoints(): Promise<number> {
   for (const userDoc of usersSnap.docs) {
     const user = userDoc.data() as UserProfile;
     const predictions = predictionsByUser.get(user.uid) ?? [];
-    const points = calculateUserPoints(predictions, matchesById);
+    const points = calculateUserPoints(predictions, matchesById, user.championPick);
 
     if (points !== user.points) {
       batch.update(userDoc.ref, {

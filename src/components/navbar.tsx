@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, ShieldCheck, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, Menu, ShieldCheck, Trophy, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +22,64 @@ export function Navbar() {
   const { user, profile, isAdmin, signOut } = useAuth();
   const { t } = useI18n();
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Close the mobile menu whenever the route changes.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // The page links + admin entry, shared between the desktop bar and the
+  // mobile menu. `stack` switches to a full-width, left-aligned layout.
+  const pageLinks = (stack: boolean) => (
+    <>
+      {NAV_LINKS.map((link) => (
+        <Button
+          key={link.href}
+          asChild
+          variant="ghost"
+          size="sm"
+          className={cn(
+            stack && "w-full justify-start",
+            pathname === link.href && "bg-accent text-accent-foreground"
+          )}
+        >
+          <Link href={link.href}>{t(link.key)}</Link>
+        </Button>
+      ))}
+
+      {isAdmin && (
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className={cn(
+            stack && "w-full justify-start",
+            pathname === "/admin" && "bg-accent text-accent-foreground"
+          )}
+        >
+          <Link href="/admin" className="gap-1.5">
+            <ShieldCheck className="h-4 w-4" />
+            {/* Icon-only on the desktop bar; labelled in the mobile menu. */}
+            <span className={cn(!stack && "hidden sm:inline")}>
+              {t("nav.admin")}
+            </span>
+          </Link>
+        </Button>
+      )}
+    </>
+  );
+
+  const userAvatar = (
+    <Avatar className="h-8 w-8">
+      {profile?.photoURL && (
+        <AvatarImage src={profile.photoURL} alt={profile.displayName} />
+      )}
+      <AvatarFallback>
+        {(profile?.displayName ?? "?").slice(0, 1).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -31,50 +90,14 @@ export function Navbar() {
           <span className="sm:hidden">WC&nbsp;26</span>
         </Link>
 
-        <nav className="flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
-            <Button
-              key={link.href}
-              asChild
-              variant="ghost"
-              size="sm"
-              className={cn(
-                pathname === link.href && "bg-accent text-accent-foreground"
-              )}
-            >
-              <Link href={link.href}>{t(link.key)}</Link>
-            </Button>
-          ))}
-
-          {isAdmin && (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className={cn(
-                pathname === "/admin" && "bg-accent text-accent-foreground"
-              )}
-            >
-              <Link href="/admin" className="gap-1.5">
-                <ShieldCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("nav.admin")}</span>
-              </Link>
-            </Button>
-          )}
-
+        {/* Desktop nav (sm and up) */}
+        <nav className="hidden items-center gap-1 sm:flex">
+          {pageLinks(false)}
           <LanguageToggle />
           <ThemeToggle />
-
           {user && (
             <>
-              <Avatar className="h-8 w-8">
-                {profile?.photoURL && (
-                  <AvatarImage src={profile.photoURL} alt={profile.displayName} />
-                )}
-                <AvatarFallback>
-                  {(profile?.displayName ?? "?").slice(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              {userAvatar}
               <Button
                 variant="ghost"
                 size="icon"
@@ -86,7 +109,62 @@ export function Navbar() {
             </>
           )}
         </nav>
+
+        {/* Mobile hamburger (below sm) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="sm:hidden"
+          aria-label="Menu"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
       </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <>
+          {/* Tap-outside backdrop (below the bar, so the X stays tappable). */}
+          <button
+            type="button"
+            aria-hidden
+            tabIndex={-1}
+            className="fixed inset-x-0 bottom-0 top-14 z-40 cursor-default sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+          <nav className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-b bg-background p-3 shadow-lg sm:hidden">
+            {user && (
+              <div className="flex items-center gap-2 px-1 pb-2">
+                {userAvatar}
+                <span className="truncate text-sm font-medium">
+                  {profile?.displayName}
+                </span>
+              </div>
+            )}
+
+            {pageLinks(true)}
+
+            <div className="flex items-center gap-1 px-1 pt-1">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
+
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-1.5"
+                onClick={() => signOut()}
+              >
+                <LogOut className="h-4 w-4" />
+                {t("nav.signOut")}
+              </Button>
+            )}
+          </nav>
+        </>
+      )}
     </header>
   );
 }
