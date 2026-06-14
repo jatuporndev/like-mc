@@ -75,13 +75,39 @@ export function groupMatchesByDate(matches: Match[]): MatchDayGroup[] {
   );
 }
 
-/** Split matches into upcoming (not locked) and completed/locked sets. */
-export function partitionMatches(matches: Match[], now: Date = new Date()) {
+/** A match that has kicked off but isn't finished yet (in progress). */
+export function isMatchLive(
+  match: Pick<Match, "status" | "winner" | "kickoff">,
+  now: Date = new Date()
+): boolean {
+  if (isMatchFinished(match)) return false;
+  if (match.status === "IN_PLAY" || match.status === "PAUSED") return true;
+  // Status can be stale between syncs: a match past kickoff that isn't finished
+  // is still in progress as far as the UI is concerned.
+  return new Date(match.kickoff).getTime() <= now.getTime();
+}
+
+/** A match is finished once it's reported FINISHED or has a decided result. */
+export function isMatchFinished(
+  match: Pick<Match, "status" | "winner">
+): boolean {
+  return match.status === "FINISHED" || match.winner !== null;
+}
+
+/**
+ * Split matches into the upcoming (first) tab and the completed tab.
+ *
+ * The Completed tab holds **only finished** matches. Everything else — not yet
+ * started *and* currently in progress — stays in the first tab, so a live game
+ * shows up under "Today" alongside the day's other fixtures instead of being
+ * buried in Completed.
+ */
+export function partitionMatches(matches: Match[]) {
   const upcoming: Match[] = [];
   const completed: Match[] = [];
   for (const m of matches) {
-    if (new Date(m.kickoff).getTime() > now.getTime()) upcoming.push(m);
-    else completed.push(m);
+    if (isMatchFinished(m)) completed.push(m);
+    else upcoming.push(m);
   }
   return { upcoming, completed };
 }

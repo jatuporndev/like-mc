@@ -60,6 +60,7 @@ const en = {
   "day.yesterday": "Yesterday",
 
   // Matches board
+  "board.playingNow": "Playing now",
   "board.upcoming": "Upcoming",
   "board.completed": "Completed",
   "board.group": "Group",
@@ -74,6 +75,7 @@ const en = {
   // Match card
   "match.draw": "Draw",
   "match.vs": "vs",
+  "match.playing": "Playing",
   "match.you": "You",
   "match.correct": "Correct prediction · +1",
   "match.wrong": "Wrong prediction",
@@ -137,6 +139,7 @@ const th: Record<MessageKey, string> = {
   "day.yesterday": "เมื่อวาน",
 
   // Matches board
+  "board.playingNow": "กำลังแข่งอยู่",
   "board.upcoming": "กำลังจะแข่ง",
   "board.completed": "แข่งจบแล้ว",
   "board.group": "กลุ่ม",
@@ -151,6 +154,7 @@ const th: Record<MessageKey, string> = {
   // Match card
   "match.draw": "เสมอ",
   "match.vs": "พบ",
+  "match.playing": "กำลังแข่ง",
   "match.you": "คุณ",
   "match.correct": "ทายถูก · +1",
   "match.wrong": "ทายผิด",

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TeamCrest } from "@/components/team-crest";
 import { cn } from "@/lib/utils";
-import { formatKickoffTime } from "@/lib/matches";
+import { formatKickoffTime, isMatchLive } from "@/lib/matches";
 import { calculatePredictionResult, lockPrediction } from "@/lib/scoring";
 import { useDeletePrediction, useSubmitPrediction } from "@/hooks/usePredictions";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +32,7 @@ export function MatchCard({
   const { user } = useAuth();
   const { t } = useI18n();
   const locked = lockPrediction(match);
+  const live = isMatchLive(match);
   const picked = prediction?.pickedTeam;
   const result = calculatePredictionResult(picked, match);
   const hasScore = match.homeScore !== null && match.awayScore !== null;
@@ -64,7 +65,13 @@ export function MatchCard({
             : ""}
         </span>
         <span className="flex items-center gap-1">
-          {locked && <Lock className="h-3 w-3" />}
+          {live ? (
+            <span className="font-semibold uppercase tracking-wide text-primary">
+              {t("match.playing")}
+            </span>
+          ) : (
+            locked && <Lock className="h-3 w-3" />
+          )}
           {formatKickoffTime(match.kickoff)}
         </span>
       </div>

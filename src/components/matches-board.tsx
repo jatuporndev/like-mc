@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarClock, CalendarCheck2 } from "lucide-react";
+import { CalendarClock, CalendarCheck2, Flame } from "lucide-react";
 
+import { MatchCard } from "@/components/match-card";
 import { MatchDaySection } from "@/components/match-day-section";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { groupMatchesByDate, partitionMatches } from "@/lib/matches";
+import { groupMatchesByDate, isMatchLive, partitionMatches } from "@/lib/matches";
 import { useI18n } from "@/lib/i18n/context";
 import { useMatches } from "@/hooks/useMatches";
 import { usePredictions } from "@/hooks/usePredictions";
@@ -23,11 +24,18 @@ export function MatchesBoard() {
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("upcoming");
 
-  const { upcomingGroups, completedGroups } = useMemo(() => {
+  const { liveMatches, upcomingGroups, completedGroups } = useMemo(() => {
     const all = matches ?? [];
     const { upcoming, completed } = partitionMatches(all);
+    // Pull in-progress matches into their own highlighted section, soonest
+    // kickoff first, and keep them out of the day groups so they don't repeat.
+    const live = upcoming
+      .filter((m) => isMatchLive(m))
+      .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+    const scheduled = upcoming.filter((m) => !isMatchLive(m));
     return {
-      upcomingGroups: groupMatchesByDate(upcoming),
+      liveMatches: live,
+      upcomingGroups: groupMatchesByDate(scheduled),
       // Most recently played first for completed matches.
       completedGroups: groupMatchesByDate(completed).reverse(),
     };
@@ -59,6 +67,31 @@ export function MatchesBoard() {
 
   return (
     <div className="space-y-5">
+      {liveMatches.length > 0 && (
+        <section className="space-y-3 rounded-xl border-2 border-primary/40 bg-primary/5 p-4">
+          <div className="flex items-center gap-2">
+            <Flame className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold uppercase tracking-wide text-primary">
+              {t("board.playingNow")}
+            </h3>
+            <span className="text-xs text-muted-foreground">
+              ({liveMatches.length})
+            </span>
+            <div className="h-px flex-1 bg-primary/20" />
+          </div>
+          <div className="grid gap-3">
+            {liveMatches.map((match) => (
+              <MatchCard
+                key={match.matchId}
+                match={match}
+                prediction={predictionMap[match.matchId]}
+                picks={picksMap[match.matchId] ?? []}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="inline-flex rounded-lg border bg-muted/40 p-1">
         <TabButton
           active={tab === "upcoming"}
