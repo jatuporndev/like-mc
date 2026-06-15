@@ -80,7 +80,7 @@ export function mapMatch(raw: FdMatch, now: Date = new Date()): Match {
     status: (raw.status as MatchStatus) ?? "SCHEDULED",
     homeScore: raw.score.fullTime.home,
     awayScore: raw.score.fullTime.away,
-    winner: normalizeWinner(raw.score.winner),
+    winner: raw.status === "FINISHED" ? normalizeWinner(raw.score.winner) : null,
     locked: new Date(kickoff).getTime() <= now.getTime(),
     updatedAt: now.toISOString(),
   };
