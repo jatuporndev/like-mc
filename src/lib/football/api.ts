@@ -1,12 +1,22 @@
 import "server-only";
 
-import type { Match, MatchStatus, Outcome, Scorer } from "@/types";
+import type {
+  Match,
+  MatchStatus,
+  Outcome,
+  Scorer,
+  StandingRow,
+  StandingsGroup,
+} from "@/types";
 
 const FOOTBALL_DATA_URL =
   "https://api.football-data.org/v4/competitions/WC/matches";
 
 const FOOTBALL_SCORERS_URL =
   "https://api.football-data.org/v4/competitions/WC/scorers";
+
+const FOOTBALL_STANDINGS_URL =
+  "https://api.football-data.org/v4/competitions/WC/standings";
 
 /** Minimal shape of the football-data.org match payload we consume. */
 interface FdTeam {
@@ -168,4 +178,94 @@ export async function fetchWorldCupScorers(limit = 10): Promise<Scorer[]> {
 
   const data = (await res.json()) as FdScorersResponse;
   return (data.scorers ?? []).map(mapScorer);
+}
+
+/** Minimal shape of one row in a football-data.org standings table. */
+interface FdStandingRow {
+  position: number;
+  team: FdTeam;
+  playedGames: number | null;
+  form: string | null;
+  won: number | null;
+  draw: number | null;
+  lost: number | null;
+  points: number | null;
+  goalsFor: number | null;
+  goalsAgainst: number | null;
+  goalDifference: number | null;
+}
+
+interface FdStanding {
+  stage: string;
+  /** TOTAL | HOME | AWAY — we only keep TOTAL. */
+  type: string;
+  /** e.g. "GROUP_A"; null for a single league table. */
+  group: string | null;
+  table: FdStandingRow[];
+}
+
+interface FdStandingsResponse {
+  standings: FdStanding[];
+}
+
+/** Map a raw football-data standings row to our `StandingRow` shape. */
+export function mapStandingRow(raw: FdStandingRow): StandingRow {
+  const team = teamLabel(raw.team, "TBD");
+  return {
+    position: raw.position,
+    teamId: raw.team.id ?? null,
+    teamName: team.name,
+    teamShort: team.short,
+    teamCrest: team.crest,
+    playedGames: raw.playedGames ?? 0,
+    won: raw.won ?? 0,
+    draw: raw.draw ?? 0,
+    lost: raw.lost ?? 0,
+    goalsFor: raw.goalsFor ?? 0,
+    goalsAgainst: raw.goalsAgainst ?? 0,
+    goalDifference: raw.goalDifference ?? 0,
+    points: raw.points ?? 0,
+    form: raw.form ?? null,
+  };
+}
+
+/**
+ * Reduce the standings payload to the group tables we display. We keep only the
+ * `TOTAL` tables that belong to a group, so home/away splits and any aggregate
+ * league table are dropped.
+ */
+export function mapStandings(raw: FdStandingsResponse): StandingsGroup[] {
+  return (raw.standings ?? [])
+    .filter((s) => s.type === "TOTAL" && s.group)
+    .map((s) => ({
+      group: s.group as string,
+      table: (s.table ?? []).map(mapStandingRow),
+    }));
+}
+
+/**
+ * Fetch the current World Cup group standings from football-data.org.
+ * Server-side only — the API token must never reach the browser. Returns an
+ * empty list before the group stage has any results.
+ */
+export async function fetchWorldCupStandings(): Promise<StandingsGroup[]> {
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+  if (!token) {
+    throw new Error("Missing FOOTBALL_DATA_API_TOKEN.");
+  }
+
+  const res = await fetch(FOOTBALL_STANDINGS_URL, {
+    headers: { "X-Auth-Token": token },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `football-data.org responded ${res.status} ${res.statusText}: ${body.slice(0, 200)}`
+    );
+  }
+
+  const data = (await res.json()) as FdStandingsResponse;
+  return mapStandings(data);
 }

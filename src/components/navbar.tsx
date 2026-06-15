@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/dashboard", key: "nav.matches" as const },
+  { href: "/standings", key: "nav.standings" as const },
   { href: "/leaderboard", key: "nav.leaderboard" as const },
   { href: "/scorers", key: "nav.scorers" as const },
 ];

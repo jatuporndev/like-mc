@@ -2,12 +2,17 @@ import "server-only";
 
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { COLLECTIONS, META_DOCS } from "@/lib/constants";
-import { fetchWorldCupMatches, fetchWorldCupScorers } from "@/lib/football/api";
+import {
+  fetchWorldCupMatches,
+  fetchWorldCupScorers,
+  fetchWorldCupStandings,
+} from "@/lib/football/api";
 import { calculateUserPoints } from "@/lib/scoring";
 import type {
   Match,
   Prediction,
   ScorersDoc,
+  StandingsDoc,
   SyncLog,
   UserProfile,
 } from "@/types";
@@ -54,6 +59,24 @@ export async function syncScorersFromFootballAPI(): Promise<number> {
     .doc(META_DOCS.scorers)
     .set(payload);
   return scorers.length;
+}
+
+/**
+ * Fetch the current group standings from football-data.org and store them as a
+ * single snapshot at meta/standings (fully replaced, not merged, so teams that
+ * drop out of a table don't linger). Returns the number of groups stored.
+ */
+export async function syncStandingsFromFootballAPI(): Promise<number> {
+  const groups = await fetchWorldCupStandings();
+  const payload: StandingsDoc = {
+    groups,
+    updatedAt: new Date().toISOString(),
+  };
+  await adminDb
+    .collection(COLLECTIONS.meta)
+    .doc(META_DOCS.standings)
+    .set(payload);
+  return groups.length;
 }
 
 /** Record the outcome of a sync run at meta/sync. */

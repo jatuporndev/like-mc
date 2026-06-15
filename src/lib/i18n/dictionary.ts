@@ -15,6 +15,7 @@ export const LANGUAGE_LABELS: Record<Lang, string> = {
 const en = {
   // Navbar
   "nav.matches": "Matches",
+  "nav.standings": "Standings",
   "nav.leaderboard": "Leaderboard",
   "nav.scorers": "Top scorers",
   "nav.admin": "Admin",
@@ -83,6 +84,22 @@ const en = {
   "scorers.loadError": "Couldn't load scorers",
   "scorers.loadErrorDesc": "Check your connection and try again.",
 
+  // Group standings
+  "standings.title": "Group standings",
+  "standings.subtitle":
+    "Who's topping each group — points, goal difference, and the qualification race.",
+  "standings.team": "Team",
+  "standings.played": "P",
+  "standings.won": "W",
+  "standings.drawn": "D",
+  "standings.lost": "L",
+  "standings.gd": "GD",
+  "standings.points": "Pts",
+  "standings.empty": "No standings yet",
+  "standings.emptyDesc": "Group tables appear here once the group stage kicks off.",
+  "standings.loadError": "Couldn't load standings",
+  "standings.loadErrorDesc": "Check your connection and try again.",
+
   // Match day labels
   "day.today": "Today",
   "day.tomorrow": "Tomorrow",
@@ -128,6 +145,7 @@ export type MessageKey = keyof typeof en;
 const th: Record<MessageKey, string> = {
   // Navbar
   "nav.matches": "แมตช์",
+  "nav.standings": "ตารางกลุ่ม",
   "nav.leaderboard": "ตารางคะแนน",
   "nav.scorers": "ดาวซัลโว",
   "nav.admin": "ผู้ดูแล",
@@ -192,6 +210,22 @@ const th: Record<MessageKey, string> = {
   "scorers.emptyDesc": "ดาวซัลโวจะแสดงที่นี่เมื่อเริ่มมีการทำประตู",
   "scorers.loadError": "โหลดดาวซัลโวไม่สำเร็จ",
   "scorers.loadErrorDesc": "ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
+
+  // Group standings
+  "standings.title": "ตารางคะแนนกลุ่ม",
+  "standings.subtitle":
+    "ใครเป็นจ่าฝูงในแต่ละกลุ่ม — คะแนน ผลต่างประตู และการลุ้นเข้ารอบ",
+  "standings.team": "ทีม",
+  "standings.played": "แข่ง",
+  "standings.won": "ชนะ",
+  "standings.drawn": "เสมอ",
+  "standings.lost": "แพ้",
+  "standings.gd": "ผลต่าง",
+  "standings.points": "แต้ม",
+  "standings.empty": "ยังไม่มีตารางคะแนน",
+  "standings.emptyDesc": "ตารางกลุ่มจะแสดงที่นี่เมื่อรอบแบ่งกลุ่มเริ่มแข่ง",
+  "standings.loadError": "โหลดตารางคะแนนไม่สำเร็จ",
+  "standings.loadErrorDesc": "ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
 
   // Match day labels
   "day.today": "วันนี้",

@@ -104,6 +104,38 @@ export interface ScorersDoc {
   updatedAt: string;
 }
 
+/** One row of a group standings table, synced from football-data.org. */
+export interface StandingRow {
+  position: number;
+  teamId: number | null;
+  teamName: string;
+  teamShort: string;
+  teamCrest: string | null;
+  playedGames: number;
+  won: number;
+  draw: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  /** Recent form like "W,D,L" when the feed provides it, else null. */
+  form: string | null;
+}
+
+/** A single group's standings table. */
+export interface StandingsGroup {
+  /** Raw group code from the feed, e.g. "GROUP_A". */
+  group: string;
+  table: StandingRow[];
+}
+
+/** Group standings snapshot, fully replaced each sync. Stored at meta/standings. */
+export interface StandingsDoc {
+  groups: StandingsGroup[];
+  updatedAt: string;
+}
+
 /** Metadata about the most recent sync run. Stored at meta/sync. */
 export interface SyncLog {
   lastSyncAt: string;

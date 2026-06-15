@@ -6,6 +6,7 @@ import {
   recalculateAllPoints,
   syncMatchesFromFootballAPI,
   syncScorersFromFootballAPI,
+  syncStandingsFromFootballAPI,
   writeSyncLog,
 } from "@/server/sync";
 
@@ -38,14 +39,28 @@ export async function POST(req: NextRequest) {
       scorersProcessed = 0;
     }
 
+    // Group standings are likewise supplementary — never let them fail the sync.
+    let standingsProcessed = 0;
+    try {
+      standingsProcessed = await syncStandingsFromFootballAPI();
+    } catch {
+      standingsProcessed = 0;
+    }
+
     await writeSyncLog({
       matchesProcessed,
       ok: true,
-      message: `Synced ${matchesProcessed} matches, ${scorersProcessed} scorers; updated ${usersUpdated} users.`,
+      message: `Synced ${matchesProcessed} matches, ${scorersProcessed} scorers, ${standingsProcessed} groups; updated ${usersUpdated} users.`,
       source,
     });
 
-    return ok({ matchesProcessed, scorersProcessed, usersUpdated, source });
+    return ok({
+      matchesProcessed,
+      scorersProcessed,
+      standingsProcessed,
+      usersUpdated,
+      source,
+    });
   } catch (error) {
     // Best-effort failure log; ignore secondary errors.
     await writeSyncLog({
