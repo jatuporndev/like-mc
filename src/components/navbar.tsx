@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { href: "/dashboard", key: "nav.matches" as const },
   { href: "/leaderboard", key: "nav.leaderboard" as const },
+  { href: "/scorers", key: "nav.scorers" as const },
 ];
 
 export function Navbar() {
@@ -100,16 +101,20 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between gap-4">
+      <div className="container flex h-14 items-center gap-4">
         <Link href="/dashboard" className="flex items-center gap-2 font-bold">
           <Trophy className="h-5 w-5 text-primary" />
           <span className="hidden sm:inline">WC&nbsp;2026 Predictor</span>
           <span className="sm:hidden">WC&nbsp;26</span>
         </Link>
 
-        {/* Desktop nav (sm and up) */}
-        <nav className="hidden items-center gap-1 sm:flex">
+        {/* Desktop nav links — centered between the logo and the controls. */}
+        <nav className="hidden flex-1 items-center justify-center gap-1 sm:flex">
           {pageLinks(false)}
+        </nav>
+
+        {/* Desktop controls (sm and up) */}
+        <div className="hidden items-center gap-1 sm:flex">
           <LanguageToggle />
           <ThemeToggle />
           {user && (
@@ -125,14 +130,14 @@ export function Navbar() {
               </Button>
             </>
           )}
-        </nav>
+        </div>
 
         {/* Mobile hamburger (below sm) */}
         <Button
           ref={toggleRef}
           variant="ghost"
           size="icon"
-          className="sm:hidden"
+          className="ml-auto sm:hidden"
           aria-label={t("nav.menu")}
           aria-expanded={open}
           aria-controls="mobile-menu"

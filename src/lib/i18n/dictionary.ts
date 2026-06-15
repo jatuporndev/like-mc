@@ -16,6 +16,7 @@ const en = {
   // Navbar
   "nav.matches": "Matches",
   "nav.leaderboard": "Leaderboard",
+  "nav.scorers": "Top scorers",
   "nav.admin": "Admin",
   "nav.signOut": "Sign out",
   "nav.menu": "Menu",
@@ -41,7 +42,6 @@ const en = {
   // Dashboard
   "dash.welcome": "Welcome back",
   "dash.pointsPre": "You have",
-  "dash.pointsPost": "Make your calls before kickoff.",
   "dash.point": "point",
   "dash.points": "points",
   "dash.matches": "Matches",
@@ -129,6 +129,7 @@ const th: Record<MessageKey, string> = {
   // Navbar
   "nav.matches": "แมตช์",
   "nav.leaderboard": "ตารางคะแนน",
+  "nav.scorers": "ดาวซัลโว",
   "nav.admin": "ผู้ดูแล",
   "nav.signOut": "ออกจากระบบ",
   "nav.menu": "เมนู",
@@ -153,7 +154,6 @@ const th: Record<MessageKey, string> = {
   // Dashboard
   "dash.welcome": "ยินดีต้อนรับกลับ",
   "dash.pointsPre": "คุณมี",
-  "dash.pointsPost": "ทายผลให้เสร็จก่อนเริ่มแข่ง",
   "dash.point": "คะแนน",
   "dash.points": "คะแนน",
   "dash.matches": "แมตช์",

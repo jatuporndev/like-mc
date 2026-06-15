@@ -62,7 +62,7 @@ const config: Config = {
       },
       fontFamily: {
         // "Twemoji Country Flags" (injected by country-flag-emoji-polyfill)
-        // contains only flag glyphs, so all other text falls through to Inter.
+        // contains only flag glyphs, so all other text falls through to Kanit.
         // This makes flag emoji render on Windows browsers.
         sans: [
           "Twemoji Country Flags",

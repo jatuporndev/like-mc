@@ -41,8 +41,11 @@ export function MatchesBoard() {
     return {
       liveMatches: live,
       upcomingGroups: groupMatchesByDate(scheduled),
-      // Most recently played first for completed matches.
-      completedGroups: groupMatchesByDate(completed).reverse(),
+      // Most recently played first — both across days and within each day, so
+      // the latest finished match sits at the top of its group.
+      completedGroups: groupMatchesByDate(completed)
+        .reverse()
+        .map((group) => ({ ...group, matches: [...group.matches].reverse() })),
     };
   }, [matches]);
 
@@ -113,7 +116,7 @@ export function MatchesBoard() {
         </section>
       )}
 
-      <div className="inline-flex rounded-lg border bg-muted/40 p-1">
+      <div className="flex w-full rounded-lg border bg-muted/40 p-1 sm:inline-flex sm:w-auto">
         <TabButton
           active={tab === "upcoming"}
           onClick={() => setTab("upcoming")}
@@ -178,9 +181,17 @@ function TabButton({
       variant="ghost"
       size="sm"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "gap-1.5",
-        active && "bg-background shadow-sm"
+        // Equal-width, full-width tabs on mobile (Android tab-bar style);
+        // compact content-width buttons from sm up. The transparent base border
+        // reserves space so the active chip's hairline causes no layout shift.
+        "flex-1 gap-1.5 border border-transparent sm:flex-none",
+        // Active chip raises above the muted track with a neutral surface,
+        // hairline, and soft shadow — no accent colour, so switching stays calm.
+        active
+          ? "border-border bg-card text-foreground shadow-sm"
+          : "text-muted-foreground"
       )}
     >
       {icon}

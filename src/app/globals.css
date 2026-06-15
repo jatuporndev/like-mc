@@ -39,37 +39,45 @@
     --radius: 0.75rem;
   }
 
+  /* Premium neutral dark — a three-layer canvas (page → surface → card) with a
+     near-imperceptible blue cast, soft hairline borders, and green reserved for
+     selection / status / CTAs only. Inspired by Linear, Vercel, UEFA dark mode;
+     deliberately not neon, not cyberpunk. */
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
+    --background: 220 35% 7%; /* #0B0F17 — page */
+    --foreground: 210 40% 98%; /* #F8FAFC — primary text */
 
-    --card: 222 44% 10%;
+    --card: 221 32% 13%; /* #171E2D — raised cards */
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 44% 10%;
+    --popover: 221 32% 13%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142 64% 47%;
-    --primary-foreground: 222 47% 7%;
+    --primary: 142 69% 58%; /* #4ADE80 — accent: selection, status, CTA */
+    --primary-foreground: 150 45% 8%; /* deep green-ink on bright green */
 
-    --secondary: 217 33% 17%;
+    /* Second neutral layer (#111827) for inset panels, toolbars, segmented
+       tracks — sits between page and card so hierarchy reads at a glance. */
+    --secondary: 221 39% 11%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 221 39% 11%;
+    --muted-foreground: 215 20% 65%; /* #94A3B8 — secondary text */
 
-    --accent: 217 33% 17%;
+    /* Neutral-elevated state fill for hover / active tabs (just above card). */
+    --accent: 221 26% 17%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 63% 45%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 64% 47%;
-    --success-foreground: 222 47% 7%;
+    --success: 142 69% 50%;
+    --success-foreground: 150 45% 8%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 142 64% 47%;
+    /* ~rgba(255,255,255,0.06) hairlines. */
+    --border: 220 19% 18%;
+    --input: 220 19% 18%;
+    --ring: 142 69% 58%;
   }
 }
 
@@ -81,19 +89,29 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* A single, restrained cool-blue depth cue anchored at the top of the page,
+     behind the navbar + page header. Fades out by ~45vh so it reads as ambient
+     light on the hero, never a wash across the whole screen. Dark theme only. */
+  .dark body {
+    background-image: radial-gradient(
+      115% 50% at 50% -8%,
+      hsl(214 48% 24% / 0.42),
+      transparent 58%
+    );
+    background-repeat: no-repeat;
+  }
 }
 
-/* Matchday hero backdrop: a soft pitch-green glow at the top over very faint
-   mowed-grass stripes. Subtle enough to read as texture, not decoration. */
+/* Hero backdrop for the landing / champion pages: a restrained cool-blue depth
+   cue at the top with the faintest green hint of the pitch underneath — enough
+   to feel like matchday, without the neon glow or the mowed-grass stripes. */
 .pitch-gradient {
   background-color: hsl(var(--background));
   background-image:
-    radial-gradient(125% 80% at 50% -25%, hsl(var(--primary) / 0.16), transparent 55%),
-    repeating-linear-gradient(
-      90deg,
-      hsl(var(--primary) / 0.022) 0 72px,
-      transparent 72px 144px
-    );
+    radial-gradient(115% 60% at 50% -15%, hsl(214 48% 24% / 0.42), transparent 58%),
+    radial-gradient(90% 45% at 50% -10%, hsl(var(--primary) / 0.05), transparent 60%);
+  background-repeat: no-repeat;
 }
 
 /* Live indicator: a small pulsing dot for the standings panel. */

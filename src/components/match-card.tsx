@@ -57,7 +57,7 @@ export function MatchCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden",
+        "flex h-full flex-col overflow-hidden",
         // Live matches carry their own emphasis (no wrapping container) so the
         // card sits in the same grid as every other match without nesting.
         live && "ring-1 ring-primary/50"
@@ -238,27 +238,27 @@ function Footer({
   const { t } = useI18n();
   if (result === "correct") {
     return (
-      <div className="flex items-center gap-1.5 border-t bg-success/10 px-4 py-2 text-sm font-medium text-success">
+      <div className="mt-auto flex items-center gap-1.5 border-t bg-success/10 px-4 py-2 text-sm font-medium text-success">
         <CheckCircle2 className="h-4 w-4" /> {t("match.correct")}
       </div>
     );
   }
   if (result === "wrong") {
     return (
-      <div className="flex items-center gap-1.5 border-t bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
+      <div className="mt-auto flex items-center gap-1.5 border-t bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
         <XCircle className="h-4 w-4" /> {t("match.wrong")}
       </div>
     );
   }
   if (locked) {
     return (
-      <div className="border-t px-4 py-2 text-xs text-muted-foreground">
+      <div className="mt-auto border-t px-4 py-2 text-xs text-muted-foreground">
         {hasPick ? t("match.lockedAwaiting") : t("match.lockedNoPick")}
       </div>
     );
   }
   return (
-    <div className="border-t px-4 py-2 text-xs text-muted-foreground">
+    <div className="mt-auto border-t px-4 py-2 text-xs text-muted-foreground">
       {hasPick ? (
         <Badge variant="secondary">{t("match.saved")}</Badge>
       ) : (

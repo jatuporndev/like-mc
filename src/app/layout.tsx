@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Kanit } from "next/font/google";
 
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({
-  subsets: ["latin"],
+// Kanit carries both Latin and Thai, so one family serves the bilingual UI.
+// It isn't a variable font — declare the weights the interface uses (regular,
+// medium, semibold, bold) so next/font self-hosts exactly those.
+const kanit = Kanit({
+  subsets: ["latin", "thai"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
@@ -22,7 +26,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0F17" },
   ],
 };
 
@@ -31,7 +35,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="th" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${kanit.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>
