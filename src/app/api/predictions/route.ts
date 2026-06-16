@@ -1,7 +1,8 @@
 import { type NextRequest } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
 
 import { adminDb } from "@/lib/firebase/admin";
-import { COLLECTIONS, predictionId } from "@/lib/constants";
+import { COLLECTIONS, META_DOCS, predictionId } from "@/lib/constants";
 import { requireUser, HttpError } from "@/server/auth";
 import { handleError, ok } from "@/lib/http";
 import { predictionInputSchema } from "@/lib/validation";
@@ -10,6 +11,9 @@ import type { Match, Prediction } from "@/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const metaPicksRef = () =>
+  adminDb.collection(COLLECTIONS.meta).doc(META_DOCS.picks);
 
 /**
  * Create or update a single match prediction for the signed-in user.
@@ -54,6 +58,31 @@ export async function POST(req: NextRequest) {
     };
 
     await ref.set(prediction);
+
+    // C2: mirror the pick into the aggregated meta/picks doc so the dashboard
+    // can read everyone's picks from one live document. Best-effort — the
+    // `predictions` write above is the source of truth, and the cron rebuilds
+    // this mirror, so a mirror hiccup must never lose the user's pick.
+    try {
+      await metaPicksRef().set(
+        {
+          picks: {
+            [matchId]: {
+              [decoded.uid]: {
+                displayName: decoded.name ?? decoded.email ?? "Anonymous",
+                photoURL: decoded.picture ?? null,
+                pickedTeam,
+              },
+            },
+          },
+          updatedAt: now,
+        },
+        { merge: true }
+      );
+    } catch {
+      // Mirror drift self-heals on the next cron rebuild.
+    }
+
     return ok(prediction);
   } catch (error) {
     return handleError(error);
@@ -90,6 +119,20 @@ export async function DELETE(req: NextRequest) {
       .collection(COLLECTIONS.predictions)
       .doc(predictionId(decoded.uid, matchId))
       .delete();
+
+    // C2: drop the user's pick from the aggregated meta/picks mirror too.
+    // Best-effort, for the same reason as the POST path above.
+    try {
+      await metaPicksRef().set(
+        {
+          picks: { [matchId]: { [decoded.uid]: FieldValue.delete() } },
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    } catch {
+      // Mirror drift self-heals on the next cron rebuild.
+    }
 
     return ok({ matchId });
   } catch (error) {

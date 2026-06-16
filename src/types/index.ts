@@ -57,6 +57,13 @@ export interface UserProfile {
   email: string;
   photoURL: string | null;
   points: number;
+  /**
+   * Portion of `points` from the tiered champion-pick bonus, persisted by
+   * `recalculateAllPoints` so the leaderboard can show the breakdown without
+   * re-reading every match. Absent on profiles synced before this field
+   * existed; treated as 0 until the next recalc fills it in.
+   */
+  championBonus?: number;
   /** Team name of the predicted champion, or null if not yet picked. */
   championPick: string | null;
   championPickedAt: string | null;
@@ -144,4 +151,44 @@ export interface SyncLog {
   message: string;
   /** "manual" (admin user) or "cron" (bearer token). */
   source: string;
+  /**
+   * Compact signature of every match's result-affecting fields (winner, stage,
+   * teams). The sync route compares it to the previous run to decide whether a
+   * points recalculation is actually needed (Fix #1).
+   */
+  resultsSignature?: string;
+  /**
+   * matchId -> content hash of the full match doc, used to write only the
+   * matches that actually changed since the last sync (Fix #5). Shares this doc
+   * so reading it costs the same single read as the signature above.
+   */
+  matchHashes?: Record<string, string>;
+  /**
+   * Whether the aggregated meta/picks mirror (C2) has ever been built. The sync
+   * route forces one recalc when this is missing so a fresh deploy self-seeds
+   * meta/picks on the first run, instead of staying empty until a result changes.
+   */
+  picksBuilt?: boolean;
+}
+
+/** One player's pick on a match, as mirrored into the meta/picks doc. */
+export interface PickEntry {
+  displayName: string;
+  photoURL: string | null;
+  pickedTeam: Outcome;
+}
+
+/**
+ * Aggregated "who picked what" mirror. Stored at meta/picks so the dashboard can
+ * read every player's picks in a single document/listener instead of scanning
+ * the whole `predictions` collection. This is a derived mirror — the `predictions`
+ * collection remains the source of truth, and the cron rebuilds this doc from it.
+ *
+ * Shape: matchId -> uid -> pick. A nested map (rather than arrays) lets the
+ * prediction API update or delete a single player's pick with one field-path
+ * write and no read.
+ */
+export interface PicksDoc {
+  picks: Record<string, Record<string, PickEntry>>;
+  updatedAt: string;
 }

@@ -10,6 +10,7 @@ export const META_DOCS = {
   sync: "sync",
   scorers: "scorers",
   standings: "standings",
+  picks: "picks",
 } as const;
 
 /** Deterministic prediction document id so each user has one pick per match. */

@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { collection, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/client";
-import { COLLECTIONS } from "@/lib/constants";
-import type { Outcome, Prediction, UserProfile } from "@/types";
+import { COLLECTIONS, META_DOCS } from "@/lib/constants";
+import type { Outcome, PicksDoc } from "@/types";
 
 /** One player's pick on a match, enriched with their display info. */
 export interface PickWithUser {
@@ -21,21 +21,18 @@ export type MatchPicks = Record<string, PickWithUser[]>;
 
 const PICKS_KEY = ["match-picks"];
 
-/** Build the matchId -> picks map from raw users + predictions. */
-function buildPicks(
-  users: Map<string, UserProfile>,
-  predictions: Prediction[]
-): MatchPicks {
+/** Flatten the meta/picks nested map (matchId -> uid -> pick) into arrays. */
+function buildPicks(picks: PicksDoc["picks"]): MatchPicks {
   const byMatch: MatchPicks = {};
-  for (const p of predictions) {
-    const u = users.get(p.userId);
-    if (!u) continue; // orphan prediction (user removed)
-    (byMatch[p.matchId] ??= []).push({
-      uid: u.uid,
-      displayName: u.displayName,
-      photoURL: u.photoURL,
-      pickedTeam: p.pickedTeam,
-    });
+  for (const [matchId, byUid] of Object.entries(picks)) {
+    for (const [uid, entry] of Object.entries(byUid)) {
+      (byMatch[matchId] ??= []).push({
+        uid,
+        displayName: entry.displayName,
+        photoURL: entry.photoURL,
+        pickedTeam: entry.pickedTeam,
+      });
+    }
   }
   return byMatch;
 }
@@ -43,59 +40,33 @@ function buildPicks(
 /**
  * All players' picks across all matches — LIVE.
  *
- * Subscribes to the `users` and `predictions` collections with Firestore
- * `onSnapshot` listeners and writes the combined result into the React Query
- * cache under PICKS_KEY. Because it shares that cache key, optimistic updates in
- * `useSubmitPrediction` still give the current user instant feedback, while
- * other players' picks stream in in realtime.
+ * C2: subscribes to a single aggregated `meta/picks` document with `onSnapshot`
+ * instead of streaming the entire `users` + `predictions` collections (~400
+ * reads per mount). The initial load is now 1 read and a live pick change is
+ * ~1 read — same realtime "watch everyone flip their picks" experience, ~400×
+ * cheaper. The result is written into the React Query cache under PICKS_KEY,
+ * which `useSubmitPrediction` also updates optimistically for instant feedback.
  */
 export function useMatchPicks() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    let users = new Map<string, UserProfile>();
-    let predictions: Prediction[] = [];
-    let haveUsers = false;
-    let havePredictions = false;
-
-    const publish = () => {
-      // Wait until both streams have delivered at least once so we never
-      // render predictions whose authors haven't loaded yet.
-      if (!haveUsers || !havePredictions) return;
-      queryClient.setQueryData<MatchPicks>(
-        PICKS_KEY,
-        buildPicks(users, predictions)
-      );
-    };
-
-    const unsubUsers = onSnapshot(
-      collection(db, COLLECTIONS.users),
+    const unsub = onSnapshot(
+      doc(db, COLLECTIONS.meta, META_DOCS.picks),
       (snap) => {
-        users = new Map(
-          snap.docs.map((d) => [d.id, d.data() as UserProfile])
+        const data = snap.exists() ? (snap.data() as PicksDoc) : null;
+        queryClient.setQueryData<MatchPicks>(
+          PICKS_KEY,
+          buildPicks(data?.picks ?? {})
         );
-        haveUsers = true;
-        publish();
       }
     );
 
-    const unsubPredictions = onSnapshot(
-      collection(db, COLLECTIONS.predictions),
-      (snap) => {
-        predictions = snap.docs.map((d) => d.data() as Prediction);
-        havePredictions = true;
-        publish();
-      }
-    );
-
-    return () => {
-      unsubUsers();
-      unsubPredictions();
-    };
+    return () => unsub();
   }, [queryClient]);
 
-  // The live listeners above are the source of truth; this query just exposes
-  // the cached value. We never refetch it manually — staleTime is infinite.
+  // The live listener above is the source of truth; this query just exposes the
+  // cached value. We never refetch it manually — staleTime is infinite.
   return useQuery<MatchPicks>({
     queryKey: PICKS_KEY,
     queryFn: () =>

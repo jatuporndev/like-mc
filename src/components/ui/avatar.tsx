@@ -26,6 +26,10 @@ const AvatarImage = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
+    // Google profile images (lh3.googleusercontent.com) return 403 when the
+    // request carries a Referer header, so the avatar silently fell back to
+    // initials. Sending no referrer makes them load. Still overridable via props.
+    referrerPolicy="no-referrer"
     className={cn("aspect-square h-full w-full", className)}
     {...props}
   />

@@ -1,5 +1,8 @@
 import "server-only";
 
+import { createHash } from "crypto";
+import { FieldValue } from "firebase-admin/firestore";
+
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { COLLECTIONS, META_DOCS } from "@/lib/constants";
 import {
@@ -10,6 +13,7 @@ import {
 import { calculateUserPoints } from "@/lib/scoring";
 import type {
   Match,
+  PicksDoc,
   Prediction,
   ScorersDoc,
   StandingsDoc,
@@ -18,19 +22,72 @@ import type {
 } from "@/types";
 
 /**
- * Fetch all World Cup matches from football-data.org and upsert them into
- * Firestore. Writes are batched (Firestore caps batches at 500 ops). Returns
- * the number of matches processed.
+ * Stable content hash of a match, excluding the volatile `updatedAt` stamp
+ * (which `mapMatch` sets to "now" on every fetch and would otherwise make every
+ * match look changed). Any meaningful field — score, status, winner, kickoff,
+ * lock, teams — still changes the hash and triggers a write.
  */
-export async function syncMatchesFromFootballAPI(): Promise<number> {
+function hashMatch(match: Match): string {
+  const { updatedAt: _updatedAt, ...stable } = match;
+  return createHash("sha1").update(JSON.stringify(stable)).digest("hex");
+}
+
+/**
+ * Compact signature of every result-affecting field across all matches. It only
+ * changes when something that can move the leaderboard changes (a winner is set,
+ * a team advances a knockout round), so the sync route can skip a recalculation
+ * that would produce identical numbers.
+ */
+function resultsSignature(matches: Match[]): string {
+  return matches
+    .map(
+      (m) =>
+        `${m.matchId}:${m.winner ?? ""}:${m.stage}:${m.homeTeam}:${m.awayTeam}`
+    )
+    .sort()
+    .join("|");
+}
+
+/** Outcome of a match sync, carrying the bookkeeping the route persists. */
+export interface MatchSyncResult {
+  /** Total matches returned by the upstream feed. */
+  matchesProcessed: number;
+  /** How many docs actually changed and were written this run. */
+  matchesWritten: number;
+  /** Results signature for Fix #1's recalc gate. */
+  signature: string;
+  /** matchId -> content hash, persisted for Fix #5's changed-only writes. */
+  hashes: Record<string, string>;
+}
+
+/**
+ * Fetch all World Cup matches from football-data.org and upsert the ones that
+ * actually changed since the last sync (Fix #5). `previousHashes` is the map the
+ * route loaded from meta/sync; any match whose content hash is unchanged is
+ * skipped. Writes are batched (Firestore caps batches at 500 ops). Returns the
+ * new signature + hash map alongside the counts.
+ */
+export async function syncMatchesFromFootballAPI(
+  previousHashes: Record<string, string> = {}
+): Promise<MatchSyncResult> {
   const matches = await fetchWorldCupMatches();
 
   const col = adminDb.collection(COLLECTIONS.matches);
   let batch = adminDb.batch();
   let opsInBatch = 0;
+  let matchesWritten = 0;
+
+  const hashes: Record<string, string> = {};
 
   for (const match of matches) {
+    const hash = hashMatch(match);
+    hashes[match.matchId] = hash;
+
+    // Identical to last sync → nothing to write.
+    if (previousHashes[match.matchId] === hash) continue;
+
     batch.set(col.doc(match.matchId), match, { merge: true });
+    matchesWritten += 1;
     opsInBatch += 1;
     if (opsInBatch === 450) {
       await batch.commit();
@@ -40,7 +97,12 @@ export async function syncMatchesFromFootballAPI(): Promise<number> {
   }
   if (opsInBatch > 0) await batch.commit();
 
-  return matches.length;
+  return {
+    matchesProcessed: matches.length,
+    matchesWritten,
+    signature: resultsSignature(matches),
+    hashes,
+  };
 }
 
 /**
@@ -90,6 +152,17 @@ export async function writeSyncLog(
     message: log.message,
     source: log.source,
   };
+  // Only persist the Fix #1/#5 bookkeeping when supplied — the failure-path log
+  // omits them so a merge keeps the last good signature + hashes intact.
+  if (log.resultsSignature !== undefined) {
+    payload.resultsSignature = log.resultsSignature;
+  }
+  if (log.matchHashes !== undefined) {
+    payload.matchHashes = log.matchHashes;
+  }
+  if (log.picksBuilt !== undefined) {
+    payload.picksBuilt = log.picksBuilt;
+  }
   await adminDb
     .collection(COLLECTIONS.meta)
     .doc(META_DOCS.sync)
@@ -111,6 +184,9 @@ export async function recalculateAllPoints(): Promise<number> {
   const matchesById = new Map<string, Match>();
   matchesSnap.forEach((d) => matchesById.set(d.id, d.data() as Match));
 
+  const usersById = new Map<string, UserProfile>();
+  usersSnap.forEach((d) => usersById.set(d.id, d.data() as UserProfile));
+
   // Group predictions by user.
   const predictionsByUser = new Map<string, Prediction[]>();
   predictionsSnap.forEach((d) => {
@@ -127,11 +203,18 @@ export async function recalculateAllPoints(): Promise<number> {
   for (const userDoc of usersSnap.docs) {
     const user = userDoc.data() as UserProfile;
     const predictions = predictionsByUser.get(user.uid) ?? [];
-    const points = calculateUserPoints(predictions, matchesById, user.championPick);
+    // The champion bonus is persisted too (C1) so the leaderboard can show the
+    // breakdown from the user doc alone, without re-reading every match.
+    const { points, championBonus } = calculateUserPoints(
+      predictions,
+      matchesById,
+      user.championPick
+    );
 
-    if (points !== user.points) {
+    if (points !== user.points || championBonus !== (user.championBonus ?? 0)) {
       batch.update(userDoc.ref, {
         points,
+        championBonus,
         updatedAt: new Date().toISOString(),
       });
       opsInBatch += 1;
@@ -145,6 +228,26 @@ export async function recalculateAllPoints(): Promise<number> {
   }
 
   if (opsInBatch > 0) await batch.commit();
+
+  // Safety net for the meta/picks mirror (C2): rebuild it from the authoritative
+  // predictions + users we already loaded above, so any drift from the
+  // incremental per-pick writes self-heals. Reuses the snapshots — no extra reads.
+  const picks: PicksDoc["picks"] = {};
+  predictionsSnap.forEach((d) => {
+    const p = d.data() as Prediction;
+    const u = usersById.get(p.userId);
+    if (!u) return; // orphan prediction (user removed)
+    (picks[p.matchId] ??= {})[p.userId] = {
+      displayName: u.displayName,
+      photoURL: u.photoURL,
+      pickedTeam: p.pickedTeam,
+    };
+  });
+  await adminDb
+    .collection(COLLECTIONS.meta)
+    .doc(META_DOCS.picks)
+    .set({ picks, updatedAt: new Date().toISOString() } satisfies PicksDoc);
+
   return updated;
 }
 
@@ -179,6 +282,24 @@ export async function deleteUserCompletely(uid: string): Promise<number> {
 
   batch.delete(adminDb.collection(COLLECTIONS.users).doc(uid));
   await batch.commit();
+
+  // Strip the user from the aggregated meta/picks mirror (C2) so their picks
+  // disappear from the board immediately, rather than lingering until the next
+  // recalc rebuild. One merge write with a FieldValue.delete() per picked match.
+  if (predictionsSnap.size > 0) {
+    const picksPatch: Record<string, Record<string, FieldValue>> = {};
+    predictionsSnap.forEach((d) => {
+      const { matchId } = d.data() as Prediction;
+      (picksPatch[matchId] ??= {})[uid] = FieldValue.delete();
+    });
+    await adminDb
+      .collection(COLLECTIONS.meta)
+      .doc(META_DOCS.picks)
+      .set(
+        { picks: picksPatch, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+  }
 
   try {
     await adminAuth.deleteUser(uid);

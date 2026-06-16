@@ -86,31 +86,34 @@ export function pointsForPrediction(
 }
 
 /**
- * Compute total points for one user: 1 per correct match prediction plus the
- * tiered champion bonus for how far their champion pick advanced. Pure function
- * — used by the recalculate endpoint and tests.
+ * Compute one user's score breakdown: `matchPoints` (1 per correct match
+ * prediction), `championBonus` (the tiered champion-pick bonus), and their sum
+ * as `points`. Pure function — the champion bonus is computed once here so
+ * callers can persist the breakdown without recomputing it.
  */
 export function calculateUserPoints(
   predictions: Prediction[],
   matchesById: Map<string, Match>,
   championPick?: string | null
-): number {
-  let total = 0;
+): { points: number; matchPoints: number; championBonus: number } {
+  let matchPoints = 0;
   for (const p of predictions) {
     const match = matchesById.get(p.matchId);
-    if (match) total += pointsForPrediction(p.pickedTeam, match);
+    if (match) matchPoints += pointsForPrediction(p.pickedTeam, match);
   }
-  total += championBonusPoints(championPick, matchesById.values());
-  return total;
+  const championBonus = championBonusPoints(championPick, matchesById.values());
+  return { points: matchPoints + championBonus, matchPoints, championBonus };
 }
 
 /**
  * Build a ranked leaderboard from user profiles. Sorted by points desc, then
  * display name asc for stable ordering. Ranks share numbers on ties (1,2,2,4).
  *
- * Pass `matches` to surface each player's champion-pick bonus as `championBonus`
- * (the rest of their total is match-prediction points). Omit it — e.g. on a
- * preview that hasn't loaded matches — and the bonus is reported as 0.
+ * The champion-pick bonus surfaced as `championBonus` comes from each user's
+ * stored `championBonus` field (persisted by `recalculateAllPoints`), so the
+ * leaderboard needs no match data. Pass `matches` only to recompute the bonus
+ * on the fly (e.g. a preview before a recalc has run); otherwise the stored
+ * value — falling back to 0 on profiles predating the field — is used.
  */
 export function calculateLeaderboard(
   users: UserProfile[],
@@ -136,7 +139,9 @@ export function calculateLeaderboard(
       displayName: u.displayName,
       photoURL: u.photoURL,
       points: u.points,
-      championBonus: matchList.length ? championBonusPoints(u.championPick, matchList) : 0,
+      championBonus: matchList.length
+        ? championBonusPoints(u.championPick, matchList)
+        : u.championBonus ?? 0,
       championPick: u.championPick,
       rank,
     };
