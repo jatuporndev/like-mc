@@ -10,6 +10,7 @@ import { TeamCrest } from "@/components/team-crest";
 import { cn } from "@/lib/utils";
 import { formatKickoffTime, isMatchLive } from "@/lib/matches";
 import { calculatePredictionResult, lockPrediction } from "@/lib/scoring";
+import { POINTS_PER_CORRECT } from "@/lib/constants";
 import { useDeletePrediction, useSubmitPrediction } from "@/hooks/usePredictions";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n/context";
@@ -63,40 +64,42 @@ export function MatchCard({
         live && "ring-1 ring-primary/50"
       )}
     >
-      {/* Meta row */}
-      <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">
+      {/* Meta row — plain text on the card surface (no filled band), so the card
+          reads as one panel instead of a stack of trays. Stage/group on the
+          left; live or lock status plus the kickoff time on the right. */}
+      <div className="flex items-center justify-between gap-2 px-4 pt-3 text-xs text-muted-foreground">
         <span className="truncate">
           {match.stage.replaceAll("_", " ")}
           {match.group
             ? ` · ${match.group.replace("GROUP_", `${t("board.group")} `)}`
             : ""}
         </span>
-        <span className="flex items-center gap-1.5">
+        <span className="flex shrink-0 items-center gap-1.5">
           {live ? (
             <span className="flex items-center gap-1.5 font-semibold text-primary">
               <span className="live-dot shrink-0" aria-hidden />
               {t("match.playing")}
             </span>
           ) : (
-            locked && <Lock className="h-3 w-3" />
+            locked && <Lock className="h-3 w-3 shrink-0" />
           )}
-          {formatKickoffTime(match.kickoff)}
+          <span className="tabular-nums">{formatKickoffTime(match.kickoff)}</span>
         </span>
       </div>
 
       {/* Teams + score — 3 equal columns so each crest sits centered directly
           above its matching prediction button below. */}
-      <div className="grid grid-cols-3 items-start gap-2 px-4 py-3">
-        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
-          <TeamCrest src={match.homeCrest} name={match.homeTeam} size={40} />
+      <div className="grid grid-cols-3 items-center gap-2 px-4 py-3">
+        <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+          <TeamCrest src={match.homeCrest} name={match.homeTeam} size={44} />
           <span className="break-words text-sm font-semibold leading-tight">
             {match.homeTeam}
           </span>
         </div>
 
-        <div className="flex h-full min-w-12 flex-col items-center justify-center">
+        <div className="flex min-w-12 flex-col items-center justify-center leading-none">
           {hasScore ? (
-            <span className="text-xl font-bold tabular-nums">
+            <span className="text-2xl font-bold tabular-nums">
               {match.homeScore}–{match.awayScore}
             </span>
           ) : (
@@ -106,8 +109,8 @@ export function MatchCard({
           )}
         </div>
 
-        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
-          <TeamCrest src={match.awayCrest} name={match.awayTeam} size={40} />
+        <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+          <TeamCrest src={match.awayCrest} name={match.awayTeam} size={44} />
           <span className="break-words text-sm font-semibold leading-tight">
             {match.awayTeam}
           </span>
@@ -182,7 +185,7 @@ function PicksRow({
   for (const p of picks) byOption[p.pickedTeam].push(p);
 
   return (
-    <div className="grid grid-cols-3 gap-2 border-t bg-muted/30 px-4 py-2">
+    <div className="grid grid-cols-3 gap-2 border-t px-4 py-2.5">
       {OUTCOMES.map((outcome) => {
         const players = byOption[outcome];
         const isWinner = winner === outcome;
@@ -238,15 +241,21 @@ function Footer({
   const { t } = useI18n();
   if (result === "correct") {
     return (
-      <div className="mt-auto flex items-center gap-1.5 border-t bg-success/10 px-4 py-2 text-sm font-medium text-success">
-        <CheckCircle2 className="h-4 w-4" /> {t("match.correct")}
+      <div className="mt-auto flex items-center justify-between gap-2 border-t bg-success/10 px-4 py-2 text-sm font-medium text-success">
+        <span className="flex items-center gap-1.5">
+          <CheckCircle2 className="h-4 w-4 shrink-0" /> {t("match.correct")}
+        </span>
+        {/* The point earned shown as an award chip, not trailing "· +1" text. */}
+        <span className="rounded-full bg-success px-2 py-0.5 text-xs font-bold tabular-nums text-success-foreground">
+          +{POINTS_PER_CORRECT}
+        </span>
       </div>
     );
   }
   if (result === "wrong") {
     return (
       <div className="mt-auto flex items-center gap-1.5 border-t bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive">
-        <XCircle className="h-4 w-4" /> {t("match.wrong")}
+        <XCircle className="h-4 w-4 shrink-0" /> {t("match.wrong")}
       </div>
     );
   }

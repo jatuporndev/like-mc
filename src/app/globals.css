@@ -131,6 +131,20 @@
   background-color: hsl(var(--primary));
 }
 
+/* Generic beacon: a pulsing halo that inherits its colour from the element
+   (via currentColor), so the same effect works on the green hero band where a
+   primary-coloured dot would disappear. Pair with a sized, rounded element. */
+.beacon {
+  position: relative;
+}
+.beacon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: currentColor;
+}
+
 /* Entrance + ambient motion. Defined only when the user accepts motion, so the
    reduced-motion path keeps every element at its fully-visible resting state
    (no class-gated blank reveals). */
@@ -169,8 +183,52 @@
       opacity: 0;
     }
   }
-  .live-dot::after {
+  .live-dot::after,
+  .beacon::after {
     animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Ambient float for the matchday emblem — a slow, gentle bob with a touch of
+     sway so the hero feels alive on landing without pulling focus from the
+     greeting. */
+  @keyframes emblem-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-6px) rotate(2.5deg);
+    }
+  }
+  .emblem-float {
+    animation: emblem-float 6s ease-in-out infinite;
+  }
+
+  /* One-shot floodlight sweep across the hero on mount — a single pass of
+     stadium light, then it rests. Purely decorative, so it sits behind content
+     and never repeats. */
+  @keyframes hero-shine {
+    from {
+      transform: translateX(-130%) skewX(-14deg);
+    }
+    to {
+      transform: translateX(360%) skewX(-14deg);
+    }
+  }
+  .hero-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 32%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      hsl(0 0% 100% / 0.14),
+      transparent
+    );
+    transform: translateX(-130%) skewX(-14deg);
+    animation: hero-shine 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.35s 1 both;
+    pointer-events: none;
   }
 }
 

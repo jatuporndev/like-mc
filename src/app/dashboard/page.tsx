@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { BarChart3, Goal, Medal } from "lucide-react";
@@ -8,12 +9,11 @@ import { AppShell } from "@/components/app-shell";
 import { MatchesBoard } from "@/components/matches-board";
 import { Leaderboard } from "@/components/leaderboard";
 import { TopScorers } from "@/components/top-scorers";
-import { LastSyncBadge } from "@/components/last-sync-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { flagForTeam } from "@/lib/constants";
+import { flagForTeam, WORLD_CUP_EMBLEM } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n/context";
 import type { Lang } from "@/lib/i18n/dictionary";
 import type { LeaderboardEntry } from "@/types";
@@ -132,88 +132,28 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <header className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {t("dash.welcome")}, {firstName}
-            </h1>
-            {standing && (
-              <p
-                className={cn(
-                  "text-sm",
-                  standing.tone === "primary"
-                    ? "font-semibold text-primary"
-                    : "text-muted-foreground",
-                )}
-              >
-                {standing.text}
-              </p>
-            )}
-          </div>
-          <LastSyncBadge />
-        </div>
-
-        {/* Player standing — one segmented scoreboard, not a grid of cards.
-            On mobile the champion cell drops to its own full-width row so long
-            team names ("France") show in full instead of truncating. The 1px
-            dividers come from a bg-border backdrop showing through gap-px, which
-            stays clean across both the 2-col (mobile) and 3-col layouts. */}
-        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-3">
-          <Stat label={t("dash.rank")}>
-            {rank ? (
-              <span className="flex items-center gap-1.5">
-                {rank <= 3 && (
-                  <Medal className={cn("h-5 w-5 shrink-0", RANK_COLOR[rank])} />
-                )}
-                <span className="tabular-nums">#{rank}</span>
-              </span>
-            ) : (
-              <span className="text-base font-medium text-muted-foreground">
-                {t("dash.unranked")}
-              </span>
-            )}
-          </Stat>
-
-          <Stat label={t("dash.statPoints")}>
-            <span className="tabular-nums">{points}</span>
-            {championBonus > 0 && (
-              <span className="ml-1.5 text-sm font-semibold text-primary">
-                +{championBonus} 🏆
-              </span>
-            )}
-          </Stat>
-
-          <Stat label={t("dash.champion")} className="col-span-2 sm:col-span-1">
-            {champion ? (
-              <span className="flex min-w-0 items-center gap-1.5">
-                <span className="shrink-0 text-xl leading-none">
-                  {flagForTeam(champion)}
-                </span>
-                <span className="truncate">{champion}</span>
-              </span>
-            ) : (
-              <span className="text-base font-medium text-muted-foreground">
-                {t("dash.noPick")}
-              </span>
-            )}
-          </Stat>
-        </dl>
-      </header>
+      <MatchdayHero
+        firstName={firstName}
+        standing={standing}
+        rank={rank}
+        points={points}
+        championBonus={championBonus}
+        champion={champion}
+      />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         {/* Mobile-only: standings live above the long match list as a single
             tabbed section (ตารางคะแนน | ดาวซัลโว) so they're reachable without
             scrolling past every match. The desktop right rail below keeps both
             stacked and is hidden here. */}
-        <MobileStandings className="lg:hidden" />
+        <MobileStandings className="reveal reveal-2 lg:hidden" />
 
-        <div className="space-y-4">
+        <div className="reveal reveal-2 space-y-4">
           <SectionHeader title={t("dash.matches")} />
           <MatchesBoard />
         </div>
 
-        <aside className="hidden space-y-6 lg:block lg:sticky lg:top-20 lg:self-start">
+        <aside className="reveal reveal-3 hidden space-y-6 lg:block lg:sticky lg:top-20 lg:self-start">
           <section className="space-y-3">
             <SectionHeader
               title={t("dash.leaderboard")}
@@ -324,8 +264,153 @@ function StandingsTab({
   );
 }
 
-/** One cell of the player standing scoreboard: muted label over a bold value. */
-function Stat({
+/**
+ * The matchday hero: a committed pitch-green band that opens the dashboard with
+ * the official World Cup emblem, the player's greeting + stakes line, and the
+ * rank/points/champion stats rebuilt as a stadium scoreboard strip. This is the
+ * one Committed surface in an otherwise Restrained product UI — green is the
+ * field here, not just an accent, so matchday energy lands the moment you land.
+ */
+function MatchdayHero({
+  firstName,
+  standing,
+  rank,
+  points,
+  championBonus,
+  champion,
+}: {
+  firstName: string;
+  standing: { text: string; tone: "primary" | "muted" } | null;
+  rank: number | undefined;
+  points: number;
+  championBonus: number;
+  champion: string | null | undefined;
+}) {
+  const { t } = useI18n();
+
+  return (
+    <section className="reveal hero-shine relative overflow-hidden rounded-2xl text-white shadow-md">
+      {/* Pitch field: a deep forest base lit from the top-right (where the
+          emblem sits) down to a darker touchline, so the band reads as a stadium
+          under floodlights rather than a flat green fill. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundColor: "hsl(150 58% 13%)",
+          backgroundImage:
+            "radial-gradient(120% 110% at 100% 0%, hsl(142 62% 32% / 0.95), transparent 58%)," +
+            "radial-gradient(90% 80% at 0% 130%, hsl(160 65% 8% / 0.9), transparent 55%)," +
+            "linear-gradient(135deg, hsl(152 60% 12%), hsl(146 55% 19%))",
+        }}
+      />
+      {/* Centre-circle motif — two faint rings echoing a pitch seen from above,
+          tucked behind the emblem. Geometry, not mowed-grass stripes. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-12 -top-20 -z-10 h-72 w-72 rounded-full border border-white/10"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute right-20 top-6 -z-10 h-44 w-44 rounded-full border border-white/[0.07]"
+      />
+      {/* Faint watermark of the player's champion-pick flag — "your nation"
+          behind the greeting. Kept low-opacity and blurred so it reads as
+          texture, never competing with the text. */}
+      {champion && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute left-[68%] top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 select-none text-[12rem] leading-none opacity-[0.06] blur-[3px]"
+        >
+          {flagForTeam(champion)}
+        </span>
+      )}
+
+      <div className="relative z-10 flex items-start justify-between gap-4 p-5 sm:p-6">
+        <div className="min-w-0 space-y-2">
+          <p className="flex items-center gap-2 text-xs font-medium text-white/70">
+            <span className="beacon h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300 text-emerald-300" />
+            <span className="truncate">
+              {t("dash.matchday")} · {t("dash.competition")}
+            </span>
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
+            {t("dash.welcome")}, {firstName}
+          </h1>
+          {standing && (
+            <p
+              className={cn(
+                "text-sm",
+                standing.tone === "primary"
+                  ? "font-semibold text-white"
+                  : "text-white/75",
+              )}
+            >
+              {standing.text}
+            </p>
+          )}
+        </div>
+
+        <Image
+          src={WORLD_CUP_EMBLEM}
+          alt={t("dash.competition")}
+          width={88}
+          height={88}
+          priority
+          className="emblem-float h-14 w-14 shrink-0 object-contain drop-shadow-lg sm:h-[88px] sm:w-[88px]"
+        />
+      </div>
+
+      {/* Scoreboard strip — same three stats as before, now on the field. Solid
+          translucent-dark cells with hairline dividers showing through gap-px;
+          champion drops to its own full-width row on mobile so long names show
+          in full. */}
+      <dl className="relative z-10 grid grid-cols-2 gap-px border-t border-white/10 bg-white/10 sm:grid-cols-3">
+        <HeroStat label={t("dash.rank")}>
+          {rank ? (
+            <span className="flex items-center gap-1.5">
+              {rank <= 3 && (
+                <Medal className={cn("h-5 w-5 shrink-0", RANK_COLOR[rank])} />
+              )}
+              <span className="tabular-nums">#{rank}</span>
+            </span>
+          ) : (
+            <span className="text-base font-medium text-white/60">
+              {t("dash.unranked")}
+            </span>
+          )}
+        </HeroStat>
+
+        <HeroStat label={t("dash.statPoints")}>
+          <span className="tabular-nums">{points}</span>
+          {championBonus > 0 && (
+            <span className="ml-1.5 text-sm font-semibold text-amber-300">
+              +{championBonus} 🏆
+            </span>
+          )}
+        </HeroStat>
+
+        <HeroStat label={t("dash.champion")} className="col-span-2 sm:col-span-1">
+          {champion ? (
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="shrink-0 text-xl leading-none">
+                {flagForTeam(champion)}
+              </span>
+              <span className="truncate">{champion}</span>
+            </span>
+          ) : (
+            <span className="text-base font-medium text-white/60">
+              {t("dash.noPick")}
+            </span>
+          )}
+        </HeroStat>
+      </dl>
+    </section>
+  );
+}
+
+/** One cell of the matchday scoreboard: a quiet label over a bold white value. */
+function HeroStat({
   label,
   className,
   children,
@@ -335,9 +420,16 @@ function Stat({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("min-w-0 bg-card px-3 py-2.5 sm:px-4 sm:py-3", className)}>
-      <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 flex items-center text-xl font-bold leading-tight">
+    <div
+      className={cn(
+        "group min-w-0 bg-black/15 px-4 py-3 transition-colors duration-200 hover:bg-black/25",
+        className,
+      )}
+    >
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-white/60">
+        {label}
+      </dt>
+      <dd className="mt-0.5 flex origin-left items-center text-xl font-bold leading-tight transition-transform duration-200 group-hover:scale-[1.06]">
         {children}
       </dd>
     </div>

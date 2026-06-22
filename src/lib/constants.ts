@@ -18,6 +18,13 @@ export function predictionId(userId: string, matchId: string): string {
   return `${userId}_${matchId}`;
 }
 
+/**
+ * Official FIFA World Cup 2026 emblem, served by football-data.org (the same
+ * host as the team crests, already allow-listed in `next.config.ts`). Used as
+ * the brand mark on the dashboard matchday hero.
+ */
+export const WORLD_CUP_EMBLEM = "https://crests.football-data.org/wm26.png";
+
 /** Points awarded for a correct match prediction. */
 export const POINTS_PER_CORRECT = 1;
 

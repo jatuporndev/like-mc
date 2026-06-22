@@ -21,6 +21,7 @@ const en = {
   "nav.admin": "Admin",
   "nav.signOut": "Sign out",
   "nav.menu": "Menu",
+  "nav.language": "Language",
 
   // Champion banner
   "banner.yourPick": "Your champion pick",
@@ -42,6 +43,8 @@ const en = {
 
   // Dashboard
   "dash.welcome": "Welcome back",
+  "dash.matchday": "Matchday",
+  "dash.competition": "FIFA World Cup 2026",
   "dash.pointsPre": "You have",
   "dash.point": "point",
   "dash.points": "points",
@@ -126,7 +129,7 @@ const en = {
   "match.vs": "vs",
   "match.playing": "Playing",
   "match.you": "You",
-  "match.correct": "Correct prediction · +1",
+  "match.correct": "Correct prediction",
   "match.wrong": "Wrong prediction",
   "match.lockedAwaiting": "Locked · awaiting result",
   "match.lockedNoPick": "Locked · no prediction made",
@@ -151,6 +154,7 @@ const th: Record<MessageKey, string> = {
   "nav.admin": "ผู้ดูแล",
   "nav.signOut": "ออกจากระบบ",
   "nav.menu": "เมนู",
+  "nav.language": "ภาษา",
 
   // Champion banner
   "banner.yourPick": "ทีมแชมป์ที่คุณเลือก",
@@ -171,6 +175,8 @@ const th: Record<MessageKey, string> = {
 
   // Dashboard
   "dash.welcome": "ยินดีต้อนรับกลับ",
+  "dash.matchday": "แมตช์เดย์",
+  "dash.competition": "ฟุตบอลโลก 2026",
   "dash.pointsPre": "คุณมี",
   "dash.point": "คะแนน",
   "dash.points": "คะแนน",
@@ -253,7 +259,7 @@ const th: Record<MessageKey, string> = {
   "match.vs": "พบ",
   "match.playing": "กำลังแข่ง",
   "match.you": "คุณ",
-  "match.correct": "ทายถูก · +1",
+  "match.correct": "ทายถูก",
   "match.wrong": "ทายผิด",
   "match.lockedAwaiting": "ล็อกแล้ว · รอผล",
   "match.lockedNoPick": "ล็อกแล้ว · ไม่ได้ทายผล",
