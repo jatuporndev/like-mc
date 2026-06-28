@@ -132,7 +132,7 @@ export function MatchCard({
             <button
               key={outcome}
               type="button"
-              disabled={locked}
+              disabled={locked || outcome === "DRAW"}
               aria-pressed={isPicked}
               aria-label={label}
               onClick={() => choose(outcome)}
