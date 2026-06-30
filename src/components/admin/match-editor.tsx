@@ -100,6 +100,12 @@ function MatchRow({ match }: { match: Match }) {
   const [awayScore, setAwayScore] = useState(
     match.awayScore?.toString() ?? ""
   );
+  const [homePens, setHomePens] = useState(
+    match.homePenalties?.toString() ?? ""
+  );
+  const [awayPens, setAwayPens] = useState(
+    match.awayPenalties?.toString() ?? ""
+  );
 
   async function save() {
     try {
@@ -109,6 +115,8 @@ function MatchRow({ match }: { match: Match }) {
         status,
         homeScore: homeScore === "" ? null : Number(homeScore),
         awayScore: awayScore === "" ? null : Number(awayScore),
+        homePenalties: homePens === "" ? null : Number(homePens),
+        awayPenalties: awayPens === "" ? null : Number(awayPens),
       });
       toast.success("Match updated", {
         description: `${match.homeTeam} vs ${match.awayTeam}`,
@@ -149,6 +157,26 @@ function MatchRow({ match }: { match: Match }) {
           onChange={(e) => setAwayScore(e.target.value)}
           className={inputClass}
           aria-label="Away score"
+        />
+
+        {/* Penalty shootout score — leave both blank for a regular result. */}
+        <span className="text-xs text-muted-foreground">pens</span>
+        <input
+          type="number"
+          min={0}
+          value={homePens}
+          onChange={(e) => setHomePens(e.target.value)}
+          className={inputClass}
+          aria-label="Home penalties"
+        />
+        <span className="text-muted-foreground">–</span>
+        <input
+          type="number"
+          min={0}
+          value={awayPens}
+          onChange={(e) => setAwayPens(e.target.value)}
+          className={inputClass}
+          aria-label="Away penalties"
         />
 
         <select

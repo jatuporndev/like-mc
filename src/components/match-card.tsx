@@ -37,6 +37,10 @@ export function MatchCard({
   const picked = prediction?.pickedTeam;
   const result = calculatePredictionResult(picked, match);
   const hasScore = match.homeScore !== null && match.awayScore !== null;
+  const hasShootout =
+    match.duration === "PENALTY_SHOOTOUT" &&
+    match.homePenalties != null &&
+    match.awayPenalties != null;
 
   function choose(value: Outcome) {
     if (locked) return;
@@ -97,11 +101,20 @@ export function MatchCard({
           </span>
         </div>
 
-        <div className="flex min-w-12 flex-col items-center justify-center leading-none">
+        <div className="flex min-w-12 flex-col items-center justify-center gap-0.5 leading-none">
           {hasScore ? (
-            <span className="text-2xl font-bold tabular-nums">
-              {match.homeScore}–{match.awayScore}
-            </span>
+            <>
+              <span className="text-2xl font-bold tabular-nums">
+                {match.homeScore}–{match.awayScore}
+              </span>
+              {hasShootout && (
+                // Penalty shootout score, shown under the on-pitch result so a
+                // 1–1 won on penalties reads as "1–1 / pens 3–4" not "4–5".
+                <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("match.penalties")} {match.homePenalties}–{match.awayPenalties}
+                </span>
+              )}
+            </>
           ) : (
             <span className="text-sm font-medium text-muted-foreground">
               {t("match.vs")}

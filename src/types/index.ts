@@ -41,8 +41,22 @@ export interface Match {
   stage: string;
   group: string | null;
   status: MatchStatus;
+  /**
+   * On-pitch score at the end of play (90' + extra time), excluding any penalty
+   * shootout. For shootout matches the upstream `fullTime` *adds* the shootout
+   * goals on top, so the sync subtracts them back out to keep this the real
+   * result (e.g. a 1–1 that went to penalties stays 1–1, not 4–5).
+   */
   homeScore: number | null;
   awayScore: number | null;
+  /**
+   * How the match was decided: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT".
+   * Optional — absent on match docs synced before shootout support existed.
+   */
+  duration?: string;
+  /** Shootout score, only set when `duration === "PENALTY_SHOOTOUT"`. */
+  homePenalties?: number | null;
+  awayPenalties?: number | null;
   /** Final result once decided; null while pending. */
   winner: Outcome | null;
   /** True once kickoff has passed — predictions are frozen. */

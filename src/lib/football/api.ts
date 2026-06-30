@@ -37,7 +37,15 @@ interface FdMatch {
   awayTeam: FdTeam;
   score: {
     winner: string | null;
+    /** "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT". */
+    duration?: string | null;
+    /**
+     * For a shootout, `fullTime` is the on-pitch goals PLUS the shootout tally
+     * (e.g. a 1–1 won 4–3 on penalties reports fullTime 5–4). `penalties` holds
+     * the shootout score on its own so we can subtract it back out.
+     */
     fullTime: { home: number | null; away: number | null };
+    penalties?: { home: number | null; away: number | null } | null;
   };
 }
 
@@ -76,6 +84,15 @@ export function mapMatch(raw: FdMatch, now: Date = new Date()): Match {
   const away = teamLabel(raw.awayTeam, "Away TBD");
   const kickoff = raw.utcDate;
 
+  const duration = raw.score.duration ?? "REGULAR";
+  const isShootout = duration === "PENALTY_SHOOTOUT";
+  const pens = isShootout ? raw.score.penalties ?? null : null;
+
+  // `fullTime` folds the shootout goals into the score, so back them out to
+  // recover the real on-pitch result. Non-shootout matches use fullTime as-is.
+  const subtractPens = (full: number | null, pen: number | null | undefined) =>
+    full !== null && pen != null ? full - pen : full;
+
   return {
     matchId: String(raw.id),
     homeTeam: home.name,
@@ -88,8 +105,11 @@ export function mapMatch(raw: FdMatch, now: Date = new Date()): Match {
     stage: raw.stage,
     group: raw.group ?? null,
     status: (raw.status as MatchStatus) ?? "SCHEDULED",
-    homeScore: raw.score.fullTime.home,
-    awayScore: raw.score.fullTime.away,
+    homeScore: pens ? subtractPens(raw.score.fullTime.home, pens.home) : raw.score.fullTime.home,
+    awayScore: pens ? subtractPens(raw.score.fullTime.away, pens.away) : raw.score.fullTime.away,
+    duration,
+    homePenalties: pens?.home ?? null,
+    awayPenalties: pens?.away ?? null,
     winner: raw.status === "FINISHED" ? normalizeWinner(raw.score.winner) : null,
     locked: new Date(kickoff).getTime() <= now.getTime(),
     updatedAt: now.toISOString(),
