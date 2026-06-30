@@ -16,6 +16,8 @@ export const adminMatchEditSchema = z.object({
   winner: z.union([outcomeSchema, z.null()]).optional(),
   homeScore: z.union([z.number().int().min(0), z.null()]).optional(),
   awayScore: z.union([z.number().int().min(0), z.null()]).optional(),
+  homePenalties: z.union([z.number().int().min(0), z.null()]).optional(),
+  awayPenalties: z.union([z.number().int().min(0), z.null()]).optional(),
   status: z
     .enum([
       "SCHEDULED",

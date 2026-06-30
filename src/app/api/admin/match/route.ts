@@ -30,6 +30,22 @@ export async function PATCH(req: NextRequest) {
     if (input.homeScore !== undefined) patch.homeScore = input.homeScore;
     if (input.awayScore !== undefined) patch.awayScore = input.awayScore;
     if (input.status !== undefined) patch.status = input.status;
+    // Setting a shootout score flips duration so the UI renders the "pens" line;
+    // clearing both back to null reverts it to a regular result.
+    if (input.homePenalties !== undefined) {
+      patch.homePenalties = input.homePenalties;
+      patch.duration =
+        input.homePenalties != null || input.awayPenalties != null
+          ? "PENALTY_SHOOTOUT"
+          : "REGULAR";
+    }
+    if (input.awayPenalties !== undefined) {
+      patch.awayPenalties = input.awayPenalties;
+      patch.duration =
+        input.homePenalties != null || input.awayPenalties != null
+          ? "PENALTY_SHOOTOUT"
+          : "REGULAR";
+    }
 
     await ref.set(patch, { merge: true });
     const usersUpdated = await recalculateAllPoints();
